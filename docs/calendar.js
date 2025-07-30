@@ -81,7 +81,15 @@ function initializeCalendar() {
             endTime: '18:00'
         },
         height: 'auto',
-        events: CONFIG.API_BASE_URL + '/api/appointments',
+        events: {
+            url: CONFIG.API_BASE_URL + '/api/appointments',
+            extraParams: {
+                'ngrok-skip-browser-warning': 'true'
+            },
+            failure: function() {
+                showNotification('❌ Fehler beim Laden der Termine', 'error');
+            }
+        },
         
         // Event styling
         eventDisplay: 'block',
@@ -279,9 +287,52 @@ function refreshCalendar() {
     showNotification('🔄 Kalender aktualisiert', 'info');
 }
 
+function debugCalendar() {
+    const events = calendar.getEvents();
+    const currentView = calendar.view;
+    const viewStart = currentView.activeStart;
+    const viewEnd = currentView.activeEnd;
+    
+    console.log('=== Calendar Debug Info ===');
+    console.log('Total events loaded:', events.length);
+    console.log('Current view:', currentView.type);
+    console.log('View range:', viewStart.toISOString(), 'to', viewEnd.toISOString());
+    
+    // Count events in current view
+    const eventsInView = events.filter(event => {
+        const eventStart = event.start;
+        return eventStart >= viewStart && eventStart <= viewEnd;
+    });
+    
+    console.log('Events in current view:', eventsInView.length);
+    eventsInView.forEach(event => {
+        console.log(`  - ${event.title} at ${event.start.toISOString()}`);
+    });
+    
+    // Force refetch
+    console.log('Fetching fresh data from:', CONFIG.API_BASE_URL + '/api/appointments');
+    fetch(CONFIG.API_BASE_URL + '/api/appointments', {
+        headers: {
+            'ngrok-skip-browser-warning': 'true'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('API returned', data.length, 'appointments');
+        const july2025 = data.filter(e => e.start && e.start.includes('2025-07'));
+        console.log('July 2025 appointments:', july2025.length);
+        july2025.forEach(e => {
+            console.log(`  - ${e.title} at ${e.start}`);
+        });
+    });
+    
+    showNotification(`🔍 Debug: ${events.length} Events geladen, ${eventsInView.length} im aktuellen Monat`, 'info');
+}
+
 function showToday() {
     calendar.today();
-    showNotification('📅 Heute angezeigt', 'info');
+    const today = new Date();
+    showNotification(`📅 Heute: ${today.toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, 'info');
 }
 
 function updateConnectionStatus(connected) {
