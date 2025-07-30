@@ -81,14 +81,29 @@ function initializeCalendar() {
             endTime: '18:00'
         },
         height: 'auto',
-        events: {
-            url: CONFIG.API_BASE_URL + '/api/appointments',
-            extraParams: {
-                'ngrok-skip-browser-warning': 'true'
-            },
-            failure: function() {
+        events: function(fetchInfo, successCallback, failureCallback) {
+            fetch(CONFIG.API_BASE_URL + '/api/appointments', {
+                method: 'GET',
+                headers: {
+                    'ngrok-skip-browser-warning': 'true',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Appointments loaded:', data.length);
+                successCallback(data);
+            })
+            .catch(error => {
+                console.error('Error loading appointments:', error);
                 showNotification('❌ Fehler beim Laden der Termine', 'error');
-            }
+                failureCallback(error);
+            });
         },
         
         // Event styling
