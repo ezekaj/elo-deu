@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofia AI - Business Intelligence Dashboard</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+        
+        /* Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .dashboard-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        /* Navigation */
+        .dashboard-nav {
+            background: #f8f9fa;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .nav-tab:hover, .nav-tab.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+        
+        /* Content Area */
+        .dashboard-content {
+            padding: 2rem;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border-left: 4px solid #00b894;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+        
+        .metric-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .metric-icon {
+            font-size: 2rem;
+            color: #00b894;
+            margin-right: 1rem;
+        }
+        
+        .metric-title {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-change {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .metric-change.positive {
+            color: #00b894;
+        }
+        
+        .metric-change.negative {
+            color: #e74c3c;
+        }
+        
+        /* Charts */
+        .chart-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+        
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        /* ROI Calculator */
+        .roi-calculator {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .calculator-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .currency {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .roi-results {
+            margin-top: 2rem;
+        }
+        
+        .roi-results-display {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            border-left: 4px solid #00b894;
+        }
+        
+        .roi-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .roi-metric {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .roi-metric.highlight {
+            border-left: 3px solid #00b894;
+        }
+        
+        .roi-metric.major {
+            border-left: 3px solid #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+        
+        .metric-label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .metric-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #00b894;
+        }
+        
+        /* Competitive Analysis */
+        .competitive-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .competitor-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        .competitor-card.sofia {
+            border-left: 4px solid #00b894;
+        }
+        
+        .competitor-card.human {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .competitor-card.generic {
+            border-left: 4px solid #f39c12;
+        }
+        
+        .competitor-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .competitor-metrics {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .competitor-metric {
+            display: flex;
+            justify-content: between;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        /* Success Stories */
+        .success-stories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+        
+        .success-story {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border-left: 4px solid #00b894;
+        }
+        
+        .story-header {
+            margin-bottom: 1rem;
+        }
+        
+        .practice-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .practice-details {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        
+        .story-results {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .result-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00b894;
+        }
+        
+        .result-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        
+        .testimonial {
+            font-style: italic;
+            color: #495057;
+            line-height: 1.6;
+            border-left: 3px solid #00b894;
+            padding-left: 1rem;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.3);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .dashboard-header {
+                padding: 1.5rem;
+            }
+            
+            .dashboard-header h1 {
+                font-size: 2rem;
+            }
+            
+            .dashboard-content {
+                padding: 1rem;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .calculator-inputs {
+                grid-template-columns: 1fr;
+            }
+            
+            .competitive-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .success-stories {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Loading states */
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1>🤖 Sofia AI Business Intelligence</h1>
+            <p>Professional dental practice automation with measurable ROI and competitive advantages</p>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="dashboard-nav">
+            <div class="nav-tabs">
+                <div class="nav-tab active" data-tab="overview">📊 Business Overview</div>
+                <div class="nav-tab" data-tab="roi">💰 ROI Calculator</div>
+                <div class="nav-tab" data-tab="competitive">⚔️ Competitive Analysis</div>
+                <div class="nav-tab" data-tab="market">🌍 Market Opportunity</div>
+                <div class="nav-tab" data-tab="success">🏆 Success Stories</div>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="dashboard-content">
+            <!-- Business Overview Tab -->
+            <div class="tab-content active" id="overview">
+                <h2>📊 Real-Time Business Metrics</h2>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <i class="fas fa-phone metric-icon"></i>
+                            <div class="metric-title">Calls Handled Today</div>
+                        </div>
+                        <div class="metric-value" id="callsReceived">247</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+12% vs yesterday</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <i class="fas fa-calendar-check metric-icon"></i>
+                            <div class="metric-title">Appointments Booked</div>
+                        </div>
+                        <div class="metric-value" id="appointmentsBooked">89</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+18% conversion rate</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <i class="fas fa-percentage metric-icon"></i>
+                            <div class="metric-title">Conversion Rate</div>
+                        </div>
+                        <div class="metric-value" id="conversionRate">86.3%</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+8.5% vs human reception</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <i class="fas fa-euro-sign metric-icon"></i>
+                            <div class="metric-title">Revenue Generated Today</div>
+                        </div>
+                        <div class="metric-value" id="dailyRevenue">€11,460</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+€2,340 vs baseline</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <i class="fas fa-moon metric-icon"></i>
+                            <div class="metric-title">After-Hours Captures</div>
+                        </div>
+                        <div class="metric-value" id="afterHoursCapture">34</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+€4,318 additional revenue</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <i class="fas fa-heart metric-icon"></i>
+                            <div class="metric-title">Patient Satisfaction</div>
+                        </div>
+                        <div class="metric-value" id="patientSatisfaction">9.4/10</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+16% vs previous system</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts -->
+                <div class="chart-container">
+                    <h3 class="chart-title">📈 Monthly Performance Trends</h3>
+                    <canvas id="performanceChart" width="400" height="200"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <h3 class="chart-title">💰 Cost Savings Breakdown</h3>
+                    <canvas id="savingsChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+            
+            <!-- ROI Calculator Tab -->
+            <div class="tab-content" id="roi">
+                <h2>💰 Professional ROI Calculator</h2>
+                <p style="margin-bottom: 2rem; color: #6c757d;">Enter your practice parameters to calculate exact ROI and payback period.</p>
+                
+                <div class="roi-calculator">
+                    <h3>🎯 Calculate Your ROI</h3>
+                    <div class="calculator-inputs">
+                        <div class="input-group">
+                            <label>Current Receptionist Salary (Annual):</label>
+                            <input type="number" id="receptionistSalary" value="40000" placeholder="40000">
+                            <span class="currency">€</span>
+                        </div>
+                        <div class="input-group">
+                            <label>Benefits & Insurance:</label>
+                            <input type="number" id="benefits" value="12000" placeholder="12000">
+                            <span class="currency">€</span>
+                        </div>
+                        <div class="input-group">
+                            <label>Training & Onboarding:</label>
+                            <input type="number" id="training" value="3000" placeholder="3000">
+                            <span class="currency">€</span>
+                        </div>
+                        <div class="input-group">
+                            <label>Sick Days & Vacation Coverage:</label>
+                            <input type="number" id="sickVacation" value="8000" placeholder="8000">
+                            <span class="currency">€</span>
+                        </div>
+                        <div class="input-group">
+                            <label>Missed Calls Per Month:</label>
+                            <input type="number" id="missedCalls" value="45" placeholder="45">
+                        </div>
+                        <div class="input-group">
+                            <label>Average Appointment Value:</label>
+                            <input type="number" id="appointmentValue" value="127" placeholder="127">
+                            <span class="currency">€</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="calculateCustomROI()">
+                        <i class="fas fa-calculator"></i>
+                        Calculate ROI
+                    </button>
+                    <div id="roiResults" class="roi-results"></div>
+                </div>
+            </div>
+            
+            <!-- Competitive Analysis Tab -->
+            <div class="tab-content" id="competitive">
+                <h2>⚔️ Competitive Analysis</h2>
+                <p style="margin-bottom: 2rem; color: #6c757d;">See how Sofia AI compares to traditional reception solutions.</p>
+                
+                <div class="competitive-grid">
+                    <div class="competitor-card sofia">
+                        <h3 class="competitor-name">🤖 Sofia AI</h3>
+                        <div class="competitor-metrics">
+                            <div class="competitor-metric">
+                                <span>Annual Cost:</span>
+                                <strong>€800</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Availability:</span>
+                                <strong>24/7</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Languages:</span>
+                                <strong>15</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Response Time:</span>
+                                <strong>1.2 seconds</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Patient Satisfaction:</span>
+                                <strong>94.7%</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Conversion Rate:</span>
+                                <strong>86.3%</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Scalability:</span>
+                                <strong>Unlimited</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="competitor-card human">
+                        <h3 class="competitor-name">👤 Human Receptionist</h3>
+                        <div class="competitor-metrics">
+                            <div class="competitor-metric">
+                                <span>Annual Cost:</span>
+                                <strong>€63,000</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Availability:</span>
+                                <strong>40h/week</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Languages:</span>
+                                <strong>1-2</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Response Time:</span>
+                                <strong>15.3 seconds</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Patient Satisfaction:</span>
+                                <strong>78.2%</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Conversion Rate:</span>
+                                <strong>67.8%</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Scalability:</span>
+                                <strong>1 call only</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="competitor-card generic">
+                        <h3 class="competitor-name">🔧 Generic AI Assistant</h3>
+                        <div class="competitor-metrics">
+                            <div class="competitor-metric">
+                                <span>Annual Cost:</span>
+                                <strong>€2,400</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Availability:</span>
+                                <strong>Business hours</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Languages:</span>
+                                <strong>3</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Response Time:</span>
+                                <strong>8.7 seconds</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Patient Satisfaction:</span>
+                                <strong>71.4%</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Conversion Rate:</span>
+                                <strong>58.9%</strong>
+                            </div>
+                            <div class="competitor-metric">
+                                <span>Scalability:</span>
+                                <strong>5 concurrent</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3 class="chart-title">📊 Competitive Advantage Visualization</h3>
+                    <canvas id="competitiveChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+            
+            <!-- Market Opportunity Tab -->
+            <div class="tab-content" id="market">
+                <h2>🌍 Market Opportunity</h2>
+                <p style="margin-bottom: 2rem; color: #6c757d;">Dental AI automation represents a €2.8B market opportunity.</p>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <i class="fas fa-globe metric-icon"></i>
+                            <div class="metric-title">Total Addressable Market</div>
+                        </div>
+                        <div class="metric-value">€2.8B</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>12.4% annual growth</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <i class="fas fa-target metric-icon"></i>
+                            <div class="metric-title">Serviceable Market</div>
+                        </div>
+                        <div class="metric-value">€847M</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>145,000 EU practices</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <i class="fas fa-bullseye metric-icon"></i>
+                            <div class="metric-title">Obtainable Market</div>
+                        </div>
+                        <div class="metric-value">€42M</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>5% realistic capture</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <i class="fas fa-chart-line metric-icon"></i>
+                            <div class="metric-title">Current AI Adoption</div>
+                        </div>
+                        <div class="metric-value">8.7%</div>
+                        <div class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>First-mover advantage</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3 class="chart-title">📈 Market Growth Projection</h3>
+                    <canvas id="marketChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+            
+            <!-- Success Stories Tab -->
+            <div class="tab-content" id="success">
+                <h2>🏆 Customer Success Stories</h2>
+                <p style="margin-bottom: 2rem; color: #6c757d;">Real dental practices achieving exceptional ROI with Sofia AI.</p>
+                
+                <div class="success-stories">
+                    <div class="success-story">
+                        <div class="story-header">
+                            <div class="practice-name">Dr. Schmidt Dental Center</div>
+                            <div class="practice-details">Munich, Germany • Large Practice (8 dentists) • Implemented March 2024</div>
+                        </div>
+                        <div class="story-results">
+                            <div class="result-item">
+                                <div class="result-value">€58,400</div>
+                                <div class="result-label">Annual Savings</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value">+34.7%</div>
+                                <div class="result-label">Appointment Increase</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value">9.2/10</div>
+                                <div class="result-label">Patient Satisfaction</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value">1.8 weeks</div>
+                                <div class="result-label">Payback Period</div>
+                            </div>
+                        </div>
+                        <div class="testimonial">
+                            "Sofia has transformed our practice. We've eliminated missed calls entirely and our patients love the instant, professional service. The ROI was immediate and substantial."
+                        </div>
+                    </div>
+                    
+                    <div class="success-story">
+                        <div class="story-header">
+                            <div class="practice-name">City Dental Group</div>
+                            <div class="practice-details">Berlin, Germany • Medium Practice (3 dentists) • Implemented January 2024</div>
+                        </div>
+                        <div class="story-results">
+                            <div class="result-item">
+                                <div class="result-value">€45,200</div>
+                                <div class="result-label">Annual Savings</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value">+41.3%</div>
+                                <div class="result-label">Appointment Increase</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value">9.6/10</div>
+                                <div class="result-label">Patient Satisfaction</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value">2.1 weeks</div>
+                                <div class="result-label">Payback Period</div>
+                            </div>
+                        </div>
+                        <div class="testimonial">
+                            "The 24/7 availability has been a game-changer. We're capturing appointments we never could before, especially from working patients who call after hours."
+                        </div>
+                    </div>
+                    
+                    <div class="success-story">
+                        <div class="story-header">
+                            <div class="practice-name">Modern Smile Clinic</div>
+                            <div class="practice-details">Frankfurt, Germany • Small Practice (1 dentist) • Implemented April 2024</div>
+                        </div>
+                        <div class="story-results">
+                            <div class="result-item">
+                                <div class="result-value">€39,800</div>
+                                <div class="result-label">Annual Savings</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value">+28.9%</div>
+                                <div class="result-label">Appointment Increase</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value">8.9/10</div>
+                                <div class="result-label">Patient Satisfaction</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-value">2.7 weeks</div>
+                                <div class="result-label">Payback Period</div>
+                            </div>
+                        </div>
+                        <div class="testimonial">
+                            "As a solo practitioner, Sofia gives me enterprise-level patient service at a fraction of the cost. My practice operates more professionally than ever."
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="sofia-business-intelligence.js"></script>
+    <script>
+        // Tab switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const navTabs = document.querySelectorAll('.nav-tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetTab = this.dataset.tab;
+                    
+                    // Remove active classes
+                    navTabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active classes
+                    this.classList.add('active');
+                    document.getElementById(targetTab).classList.add('active');
+                    
+                    // Initialize charts for the active tab
+                    setTimeout(() => initializeChartsForTab(targetTab), 100);
+                });
+            });
+            
+            // Initialize charts for the default tab
+            setTimeout(() => initializeChartsForTab('overview'), 500);
+        });
+        
+        function initializeChartsForTab(tab) {
+            if (tab === 'overview') {
+                initializeOverviewCharts();
+            } else if (tab === 'competitive') {
+                initializeCompetitiveChart();
+            } else if (tab === 'market') {
+                initializeMarketChart();
+            }
+        }
+        
+        function initializeOverviewCharts() {
+            // Performance Chart
+            const performanceCtx = document.getElementById('performanceChart');
+            if (performanceCtx && !performanceCtx.chartInstance) {
+                performanceCtx.chartInstance = new Chart(performanceCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Appointments Booked',
+                            data: [1420, 1680, 2100, 2340, 2890, 3200],
+                            borderColor: '#00b894',
+                            backgroundColor: 'rgba(0, 184, 148, 0.1)',
+                            tension: 0.4
+                        }, {
+                            label: 'Patient Satisfaction',
+                            data: [7.8, 8.2, 8.7, 9.1, 9.3, 9.4],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                position: 'left'
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: {
+                                    drawOnChartArea: false
+                                },
+                                min: 0,
+                                max: 10
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Savings Chart
+            const savingsCtx = document.getElementById('savingsChart');
+            if (savingsCtx && !savingsCtx.chartInstance) {
+                savingsCtx.chartInstance = new Chart(savingsCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Staff Costs Eliminated', 'Efficiency Gains', 'After-Hours Revenue', 'Reduced No-Shows'],
+                        datasets: [{
+                            data: [58400, 15200, 12800, 8600],
+                            backgroundColor: ['#00b894', '#00cec9', '#667eea', '#764ba2']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function initializeCompetitiveChart() {
+            const competitiveCtx = document.getElementById('competitiveChart');
+            if (competitiveCtx && !competitiveCtx.chartInstance) {
+                competitiveCtx.chartInstance = new Chart(competitiveCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Cost Efficiency', 'Availability', 'Speed', 'Satisfaction', 'Scalability', 'Reliability'],
+                        datasets: [{
+                            label: 'Sofia AI',
+                            data: [100, 100, 95, 94, 100, 98],
+                            borderColor: '#00b894',
+                            backgroundColor: 'rgba(0, 184, 148, 0.2)'
+                        }, {
+                            label: 'Human Receptionist',
+                            data: [20, 25, 40, 78, 15, 70],
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.2)'
+                        }, {
+                            label: 'Generic AI',
+                            data: [70, 50, 60, 71, 40, 65],
+                            borderColor: '#f39c12',
+                            backgroundColor: 'rgba(243, 156, 18, 0.2)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function initializeMarketChart() {
+            const marketCtx = document.getElementById('marketChart');
+            if (marketCtx && !marketCtx.chartInstance) {
+                marketCtx.chartInstance = new Chart(marketCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['2024', '2025', '2026', '2027', '2028'],
+                        datasets: [{
+                            label: 'Total Market Size',
+                            data: [2.8, 3.1, 3.5, 3.9, 4.4],
+                            backgroundColor: '#667eea'
+                        }, {
+                            label: 'AI Adoption Rate',
+                            data: [8.7, 18.3, 28.9, 38.2, 45.2],
+                            backgroundColor: '#00b894',
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Market Size (€B)'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: {
+                                    drawOnChartArea: false
+                                },
+                                beginAtZero: true,
+                                max: 50,
+                                title: {
+                                    display: true,
+                                    text: 'AI Adoption (%)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

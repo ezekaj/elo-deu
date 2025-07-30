@@ -3,178 +3,473 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sofia Dental Assistant - elosofia.site</title>
+    <title>Zahnarztpraxis Kalender</title>
+    
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+    
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        
+        .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-sofia {
+            background: #1db954;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-sofia:hover {
+            background: #1aa34a;
+        }
+        
+        .btn-sofia.active {
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
+        
+        .sofia-icon {
+            display: inline-block;
+            animation: none;
+        }
+        
+        .btn-sofia.active .sofia-icon {
+            animation: rotate 2s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .sofia-interface {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            max-width: 90%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            height: 500px;
+            z-index: 1001;
+        }
+        
+        .sofia-interface.visible {
+            display: flex;
+        }
+        
+        .sofia-header {
+            background: linear-gradient(135deg, #1db954 0%, #1aa34a 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sofia-chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .sofia-message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        
+        .sofia-message.sofia {
+            background: #e3f2fd;
+            color: #1565c0;
+            margin-right: auto;
+        }
+        
+        .sofia-message.user {
+            background: #1db954;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .sofia-status {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            border-radius: 0 0 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .voice-indicator {
+            width: 20px;
+            height: 20px;
+            background: #1db954;
+            border-radius: 50%;
+            animation: voicePulse 1.5s ease-in-out infinite;
+        }
+        
+        .voice-indicator.inactive {
+            background: #ccc;
+            animation: none;
+        }
+        
+        @keyframes voicePulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+        }
+        
+        .sofia-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0;
-            padding: 20px;
         }
-        .container {
+        
+        .sofia-close:hover {
+            opacity: 0.8;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .status-confirmed { background: #d4edda; color: #155724; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+        .status-completed { background: #d1ecf1; color: #0c5460; }
+        
+        #calendar {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-            padding: 40px;
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2.5em;
-        }
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 1.2em;
-        }
-        .sofia-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 20px 40px;
-            font-size: 1.2em;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-            margin: 20px 10px;
-        }
-        .sofia-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
-        }
-        .sofia-button:active {
-            transform: translateY(0);
-        }
-        .status {
-            margin-top: 30px;
-            padding: 20px;
             border-radius: 10px;
-            background: #f8f9fa;
+            padding: 20px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        .fc-event {
+            border-radius: 4px !important;
+            border: none !important;
+            padding: 2px 6px !important;
+            font-weight: 500 !important;
+        }
+        
+        .fc-event-title {
+            font-weight: 600 !important;
+        }
+        
+        .modal {
             display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
         }
-        .status.active {
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
             display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
         }
-        .status.connecting {
-            border-left: 4px solid #ffc107;
-            color: #856404;
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
         }
-        .status.connected {
-            border-left: 4px solid #28a745;
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        
+        .connected {
+            background: #d4edda;
             color: #155724;
         }
-        .status.error {
-            border-left: 4px solid #dc3545;
+        
+        .disconnected {
+            background: #f8d7da;
             color: #721c24;
         }
-        .features {
-            text-align: left;
-            margin: 30px 0;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-        .features h3 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-        .features ul {
-            list-style: none;
-            padding: 0;
-        }
-        .features li {
-            padding: 8px 0;
-            padding-left: 25px;
-            position: relative;
-        }
-        .features li:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #667eea;
-            font-weight: bold;
-        }
-        .demo-note {
-            margin-top: 30px;
-            padding: 20px;
-            background: #e8f4fd;
-            border-radius: 10px;
-            border-left: 4px solid #0066cc;
-            text-align: left;
-        }
-        .demo-note h4 {
-            margin-top: 0;
-            color: #0066cc;
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .controls {
+                text-align: center;
+            }
+            
+            .btn {
+                margin: 5px;
+                width: 100%;
+                max-width: 200px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🦷 Sofia Dental Assistant</h1>
-        <p class="subtitle">Ihre intelligente Sprachassistentin für Zahnarzttermine</p>
-        
-        <div class="features">
-            <h3>Was kann Sofia?</h3>
-            <ul>
-                <li>Termine vereinbaren und verwalten</li>
-                <li>Patienteninformationen abrufen</li>
-                <li>Behandlungspläne besprechen</li>
-                <li>Terminerinnerungen erstellen</li>
-                <li>Notfalltermine koordinieren</li>
-            </ul>
-        </div>
+    <div class="connection-status disconnected" id="connectionStatus">
+        🔴 Verbindung wird hergestellt...
+    </div>
 
-        <button class="sofia-button" onclick="connectToSofia()">
-            🎤 Mit Sofia sprechen
+    <div class="header">
+        <h1>🦷 Zahnarztpraxis Kalender</h1>
+        <p>Terminverwaltung mit Sofia-Integration</p>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-success" onclick="openNewAppointmentModal()">
+            ➕ Neuer Termin
         </button>
-
-        <button class="sofia-button" onclick="window.open(config.apiUrl.replace('3005', '5000') + '/crm', '_blank')">
-            📊 CRM Dashboard
+        <button class="btn" onclick="refreshCalendar()">
+            🔄 Aktualisieren
         </button>
+        <button class="btn" onclick="showToday()">
+            📅 Heute anzeigen
+        </button>
+        <button class="btn btn-sofia" id="sofiaAgentBtn">
+            <span class="sofia-icon">🎧</span> Sofia Agent
+        </button>
+        <span class="status-indicator status-confirmed">✅ Bestätigt</span>
+        <span class="status-indicator status-cancelled">❌ Abgesagt</span>
+        <span class="status-indicator status-completed">✅ Erledigt</span>
+    </div>
 
-        <div id="status" class="status"></div>
+    <div id="calendar"></div>
 
-        <div class="demo-note">
-            <h4>🔧 Demo-Modus</h4>
-            <p>Sofia läuft auf einem privaten Server. Für die Sprachfunktion benötigen Sie Zugriff auf:</p>
-            <ul style="margin: 10px 0; padding-left: 20px;">
-                <li>Voice Server: <code>ws://46.5.138.40:7880</code></li>
-                <li>API Server: <code>http://46.5.138.40:3005</code></li>
-            </ul>
+    <!-- New Appointment Modal -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>📅 Neuer Termin</h2>
+            <form id="appointmentForm">
+                <div class="form-group">
+                    <label for="patientName">Patient Name *</label>
+                    <input type="text" id="patientName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="patientPhone">Telefon *</label>
+                    <input type="tel" id="patientPhone" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="appointmentDate">Datum *</label>
+                    <input type="date" id="appointmentDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="appointmentTime">Uhrzeit *</label>
+                    <input type="time" id="appointmentTime" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="treatmentType">Behandlung</label>
+                    <select id="treatmentType">
+                        <option value="Kontrolle">Kontrolle</option>
+                        <option value="Zahnreinigung">Zahnreinigung</option>
+                        <option value="Füllung">Füllung</option>
+                        <option value="Wurzelbehandlung">Wurzelbehandlung</option>
+                        <option value="Extraktion">Extraktion</option>
+                        <option value="Beratung">Beratung</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Notizen</label>
+                    <textarea id="notes" rows="3"></textarea>
+                </div>
+                
+                <div style="text-align: right; margin-top: 30px;">
+                    <button type="button" class="btn" onclick="closeModal()" style="background: #6c757d;">
+                        Abbrechen
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        Termin erstellen
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <script src="app.js"></script>
-    <script>
-        // Add configuration section
-        const configHTML = `
-            <div id="configSection" style="display: none; margin-top: 20px; padding: 20px; background: #f0f8ff; border-radius: 10px;">
-                <h4 style="margin-top: 0;">🔧 Server Configuration</h4>
-                <input type="text" id="apiUrl" placeholder="API URL (https://xxx.ngrok-free.app)" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                <input type="text" id="wsUrl" placeholder="WebSocket URL (wss://xxx.ngrok-free.app)" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                <button onclick="saveConfig()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Save Configuration</button>
-                <button onclick="testConnection()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-left: 10px;">Test Connection</button>
+    <!-- Sofia Voice Interface -->
+    <div class="sofia-interface" id="sofiaInterface">
+        <div class="sofia-header">
+            <div>
+                <h3 style="margin: 0;">Sofia AI Assistant</h3>
+                <small style="opacity: 0.9;">Sprechen Sie in Deutsch, English oder Italiano</small>
             </div>
-            <div style="text-align: center; margin-top: 10px;">
-                <a href="#" onclick="showConfig(); return false;" style="color: #667eea; text-decoration: none; font-size: 14px;">⚙️ Configure Server</a>
-            </div>
-        `;
-        
-        // Insert config section after status div
-        document.addEventListener('DOMContentLoaded', () => {
-            const statusDiv = document.getElementById('status');
-            if (statusDiv) {
-                statusDiv.insertAdjacentHTML('afterend', configHTML);
-            }
-        });
-    </script>
+            <button class="sofia-close" onclick="closeSofiaInterface()">✕</button>
+        </div>
+        <div class="sofia-chat" id="sofiaChat">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="sofia-status">
+            <div class="voice-indicator" id="voiceIndicator"></div>
+            <span id="sofiaStatusText">Bereit zum Zuhören...</span>
+        </div>
+    </div>
+
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <!-- Socket.io -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    
+    <!-- Configuration -->
+    <script src="config.js"></script>
+    
+    <script src="calendar.js"></script>
+    <script src="sofia-real-connection.js"></script>
 </body>
 </html>
