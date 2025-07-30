@@ -2899,8 +2899,9 @@ async def haeufige_behandlungsgruende(
 class KalenderClient:
     """Client für direkten Kalender-Zugriff"""
     
-    def __init__(self, calendar_url: str = "http://localhost:3005"):
-        self.calendar_url = calendar_url
+    def __init__(self, calendar_url: str = None):
+        # Use environment variable or fallback to localhost
+        self.calendar_url = calendar_url or os.getenv('CALENDAR_URL', 'http://localhost:3005')
         self.client = httpx.AsyncClient(timeout=30.0)
     
     async def get_next_available(self) -> dict:
