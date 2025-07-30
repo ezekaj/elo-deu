@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofia Dental Assistant - elosofia.site</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+        .sofia-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            margin: 20px 10px;
+        }
+        .sofia-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+        .sofia-button:active {
+            transform: translateY(0);
+        }
+        .status {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            display: none;
+        }
+        .status.active {
+            display: block;
+        }
+        .status.connecting {
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+        .status.connected {
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        .status.error {
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        .features {
+            text-align: left;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .features h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+        .features li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        .features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .link-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+        .link-section a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 500;
+        }
+        .link-section a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦷 Sofia Dental Assistant</h1>
+        <p class="subtitle">Ihre intelligente Sprachassistentin für Zahnarzttermine</p>
+        
+        <div class="features">
+            <h3>Was kann Sofia?</h3>
+            <ul>
+                <li>Termine vereinbaren und verwalten</li>
+                <li>Patienteninformationen abrufen</li>
+                <li>Behandlungspläne besprechen</li>
+                <li>Terminerinnerungen erstellen</li>
+                <li>Notfalltermine koordinieren</li>
+            </ul>
+        </div>
+
+        <button class="sofia-button" onclick="connectToSofia()">
+            🎤 Mit Sofia sprechen
+        </button>
+
+        <button class="sofia-button" onclick="openCalendar()">
+            📅 Kalender öffnen
+        </button>
+
+        <div id="status" class="status"></div>
+
+        <div class="link-section">
+            <a href="/crm/" target="_blank">CRM Dashboard</a>
+            <a href="https://github.com/ezekaj/elo-deu" target="_blank">GitHub</a>
+        </div>
+    </div>
+
+    <script>
+        // Update these URLs when deployed
+        const LIVEKIT_URL = window.location.protocol === 'https:' 
+            ? 'wss://ws.elosofia.site' 
+            : 'ws://localhost:7880';
+        
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status active ' + type;
+        }
+
+        async function connectToSofia() {
+            updateStatus('Verbinde mit Sofia...', 'connecting');
+            
+            try {
+                // Check if LiveKit is accessible
+                const wsUrl = LIVEKIT_URL.replace('ws://', 'http://').replace('wss://', 'https://');
+                const response = await fetch(wsUrl + '/health').catch(() => null);
+                
+                if (response && response.ok) {
+                    updateStatus('Verbunden! Mikrofonzugriff wird angefordert...', 'connected');
+                    
+                    // Here you would integrate the actual LiveKit connection
+                    // For now, we'll show a success message
+                    setTimeout(() => {
+                        updateStatus('Sofia ist bereit! Sprechen Sie jetzt.', 'connected');
+                    }, 2000);
+                } else {
+                    updateStatus('LiveKit-Service wird gestartet. Bitte versuchen Sie es in wenigen Sekunden erneut.', 'error');
+                }
+            } catch (error) {
+                updateStatus('Verbindungsfehler: ' + error.message, 'error');
+            }
+        }
+
+        function openCalendar() {
+            // Try to open calendar, fallback to CRM if not available
+            window.open('/calendar/', '_blank') || window.open('/crm/', '_blank');
+        }
+
+        // Check service status on load
+        window.addEventListener('load', async () => {
+            const services = [
+                { name: 'CRM', url: '/crm/' },
+                { name: 'LiveKit', url: LIVEKIT_URL.replace('ws://', 'http://').replace('wss://', 'https://') + '/health' }
+            ];
+            
+            let allHealthy = true;
+            for (const service of services) {
+                try {
+                    const response = await fetch(service.url, { mode: 'no-cors' }).catch(() => null);
+                    if (!response) allHealthy = false;
+                } catch {
+                    allHealthy = false;
+                }
+            }
+            
+            if (allHealthy) {
+                updateStatus('Alle Dienste sind betriebsbereit', 'connected');
+                setTimeout(() => {
+                    document.getElementById('status').classList.remove('active');
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+tunnel: elosofia
+credentials-file: /home/elo/.cloudflared/b2367174-aec8-4b55-9f57-6ecd2771e235.json
+
+ingress:
+  - hostname: elosofia.site
+    service: http://localhost:3005
+  - hostname: www.elosofia.site
+    service: http://localhost:3005
+  - hostname: ws.elosofia.site
+    service: ws://localhost:7880
+  - hostname: crm.elosofia.site
+    service: http://localhost:5000
+  - service: http_status:404

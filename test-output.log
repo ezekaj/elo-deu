@@ -1,0 +1,16 @@
+🧪 Testing Sofia Connection...
+API Base: https://772ec752906e.ngrok-free.app
+✅ API is responding: 200
+
+📡 Requesting LiveKit token with agent...
+✅ Got token for room: test-room-1753900531
+   URL: ws://localhost:7880
+   Identity: Test User 1753900531
+
+⏳ Waiting 5 seconds for agent dispatch...
+   Check Sofia agent logs with: docker logs sofia-agent-standalone --tail 20
+
+📝 To verify Sofia is working:
+1. Check Sofia logs: docker logs sofia-agent-standalone --tail 50
+2. Look for 'SOFIA ENTRYPOINT TRIGGERED' or room assignment messages
+3. Test on website: https://elosofia.site

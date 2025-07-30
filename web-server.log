@@ -1,0 +1,49 @@
+127.0.0.1 - - [30/Jul/2025 13:50:31] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jul/2025 14:05:26] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jul/2025 17:38:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jul/2025 17:38:28] "GET /crm/ HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jul/2025 17:38:28] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:38:28] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:38:30] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:38:30] "GET /calendar/ HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:46:28] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [30/Jul/2025 17:56:12] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:12] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:13] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:13] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:15] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:15] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:18] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:18] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:23] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:23] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:28] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:28] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:29] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:29] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:30] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:30] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:30] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:30] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:32] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:32] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:33] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:33] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:36] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:36] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:36] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:36] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:42] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:42] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:44] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:44] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:47] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:47] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:49] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:49] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:56:56] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:56:56] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:57:20] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:57:20] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
+127.0.0.1 - - [30/Jul/2025 17:57:21] code 404, message File not found
+127.0.0.1 - - [30/Jul/2025 17:57:21] "GET /socket.io/?EIO=4&transport=websocket HTTP/1.1" 404 -
