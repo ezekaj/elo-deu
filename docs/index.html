@@ -136,7 +136,7 @@
             🎤 Mit Sofia sprechen
         </button>
 
-        <button class="sofia-button" onclick="window.open('http://46.5.138.40:5000', '_blank')">
+        <button class="sofia-button" onclick="window.open(config.apiUrl.replace('3005', '5000') + '/crm', '_blank')">
             📊 CRM Dashboard
         </button>
 
@@ -152,31 +152,29 @@
         </div>
     </div>
 
+    <script src="app.js"></script>
     <script>
-        // Configuration
-        const LIVEKIT_URL = 'ws://46.5.138.40:7880';
-        const API_URL = 'http://46.5.138.40:3005';
+        // Add configuration section
+        const configHTML = `
+            <div id="configSection" style="display: none; margin-top: 20px; padding: 20px; background: #f0f8ff; border-radius: 10px;">
+                <h4 style="margin-top: 0;">🔧 Server Configuration</h4>
+                <input type="text" id="apiUrl" placeholder="API URL (https://xxx.ngrok-free.app)" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="text" id="wsUrl" placeholder="WebSocket URL (wss://xxx.ngrok-free.app)" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <button onclick="saveConfig()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Save Configuration</button>
+                <button onclick="testConnection()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin-left: 10px;">Test Connection</button>
+            </div>
+            <div style="text-align: center; margin-top: 10px;">
+                <a href="#" onclick="showConfig(); return false;" style="color: #667eea; text-decoration: none; font-size: 14px;">⚙️ Configure Server</a>
+            </div>
+        `;
         
-        function updateStatus(message, type) {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.className = 'status active ' + type;
-        }
-
-        async function connectToSofia() {
-            updateStatus('Verbinde mit Sofia Server...', 'connecting');
-            
-            // Since we can't directly connect to ws:// from https:// GitHub Pages,
-            // we'll show instructions
-            setTimeout(() => {
-                updateStatus('Sofia benötigt eine direkte Verbindung. Bitte nutzen Sie die lokale Installation oder kontaktieren Sie uns für eine Demo.', 'error');
-            }, 2000);
-        }
-
-        // Check if we're on GitHub Pages
-        if (window.location.hostname.includes('github.io') || window.location.hostname === 'elosofia.site') {
-            console.log('Running on GitHub Pages - WebSocket connections to non-SSL servers are restricted');
-        }
+        // Insert config section after status div
+        document.addEventListener('DOMContentLoaded', () => {
+            const statusDiv = document.getElementById('status');
+            if (statusDiv) {
+                statusDiv.insertAdjacentHTML('afterend', configHTML);
+            }
+        });
     </script>
 </body>
 </html>

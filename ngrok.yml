@@ -1,0 +1,15 @@
+version: "2"
+authtoken: YOUR_AUTH_TOKEN
+tunnels:
+  sofia-web:
+    proto: http
+    addr: 3005
+    inspect: false
+  sofia-ws:
+    proto: http
+    addr: 7880
+    inspect: false
+  crm:
+    proto: http
+    addr: 5000
+    inspect: false
