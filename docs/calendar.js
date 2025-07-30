@@ -82,6 +82,7 @@ function initializeCalendar() {
         },
         height: 'auto',
         events: function(fetchInfo, successCallback, failureCallback) {
+            console.log('Fetching appointments from:', CONFIG.API_BASE_URL + '/api/appointments');
             fetch(CONFIG.API_BASE_URL + '/api/appointments', {
                 method: 'GET',
                 headers: {
@@ -90,18 +91,28 @@ function initializeCalendar() {
                 }
             })
             .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers.get('content-type'));
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                return response.json();
+                return response.text(); // Get as text first to debug
             })
-            .then(data => {
-                console.log('Appointments loaded:', data.length);
-                successCallback(data);
+            .then(text => {
+                console.log('Response text (first 200 chars):', text.substring(0, 200));
+                try {
+                    const data = JSON.parse(text);
+                    console.log('Appointments loaded:', data.length);
+                    successCallback(data);
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    console.error('Full response:', text);
+                    throw e;
+                }
             })
             .catch(error => {
                 console.error('Error loading appointments:', error);
-                showNotification('❌ Fehler beim Laden der Termine', 'error');
+                showNotification('❌ Fehler beim Laden der Termine: ' + error.message, 'error');
                 failureCallback(error);
             });
         },
@@ -309,6 +320,7 @@ function debugCalendar() {
     const viewEnd = currentView.activeEnd;
     
     console.log('=== Calendar Debug Info ===');
+    console.log('CONFIG.API_BASE_URL:', CONFIG.API_BASE_URL);
     console.log('Total events loaded:', events.length);
     console.log('Current view:', currentView.type);
     console.log('View range:', viewStart.toISOString(), 'to', viewEnd.toISOString());
@@ -324,21 +336,44 @@ function debugCalendar() {
         console.log(`  - ${event.title} at ${event.start.toISOString()}`);
     });
     
-    // Force refetch
-    console.log('Fetching fresh data from:', CONFIG.API_BASE_URL + '/api/appointments');
-    fetch(CONFIG.API_BASE_URL + '/api/appointments', {
+    // Test API directly
+    console.log('Testing API directly...');
+    const testUrl = CONFIG.API_BASE_URL + '/api/appointments';
+    console.log('Test URL:', testUrl);
+    
+    // Test without ngrok header
+    fetch(testUrl)
+    .then(response => {
+        console.log('Without header - Status:', response.status);
+        return response.text();
+    })
+    .then(text => {
+        console.log('Without header - Response (first 100 chars):', text.substring(0, 100));
+    })
+    .catch(error => {
+        console.error('Without header - Error:', error);
+    });
+    
+    // Test with ngrok header
+    fetch(testUrl, {
         headers: {
             'ngrok-skip-browser-warning': 'true'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('With header - Status:', response.status);
+        return response.json();
+    })
     .then(data => {
-        console.log('API returned', data.length, 'appointments');
+        console.log('With header - API returned', data.length, 'appointments');
         const july2025 = data.filter(e => e.start && e.start.includes('2025-07'));
         console.log('July 2025 appointments:', july2025.length);
         july2025.forEach(e => {
             console.log(`  - ${e.title} at ${e.start}`);
         });
+    })
+    .catch(error => {
+        console.error('With header - Error:', error);
     });
     
     showNotification(`🔍 Debug: ${events.length} Events geladen, ${eventsInView.length} im aktuellen Monat`, 'info');
