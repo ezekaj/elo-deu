@@ -611,6 +611,31 @@ function getDayName(dateString) {
   return date.toLocaleDateString('de-DE', { weekday: 'long' });
 }
 
+// LiveKit token endpoint
+app.post('/api/livekit-token', async (req, res) => {
+  const { identity, room, metadata } = req.body;
+  
+  try {
+    const roomName = room || 'sofia-room';
+    const participantName = identity || 'calendar-user-' + Date.now();
+    
+    console.log(`🎟️ Generating LiveKit token for ${participantName} in room ${roomName}`);
+    
+    const token = await generateLiveKitToken(participantName, roomName);
+    const livekitUrl = process.env.LIVEKIT_URL || 'ws://localhost:7880';
+    
+    res.json({
+      token: token,
+      url: livekitUrl,
+      room: roomName,
+      identity: participantName
+    });
+  } catch (error) {
+    console.error('❌ Error generating LiveKit token:', error);
+    res.status(500).json({ error: 'Failed to generate token' });
+  }
+});
+
 // Sofia connection endpoint for voice chat
 app.post('/api/sofia/connect', async (req, res) => {
   const { participantName, roomName } = req.body;
