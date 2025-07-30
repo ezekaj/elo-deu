@@ -73,6 +73,7 @@ function initializeCalendar() {
     
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
+        initialDate: new Date(), // Ensure we start at current month
         headerToolbar: {
             left: 'prev,next heute',
             center: 'title',
@@ -117,6 +118,11 @@ function initializeCalendar() {
                 try {
                     const data = JSON.parse(text);
                     console.log('Appointments loaded:', data.length);
+                    console.log('First 3 appointments:', data.slice(0, 3).map(a => ({
+                        title: a.title,
+                        start: a.start
+                    })));
+                    console.log('Calling successCallback with', data.length, 'events');
                     successCallback(data);
                 } catch (e) {
                     console.error('JSON parse error:', e);
