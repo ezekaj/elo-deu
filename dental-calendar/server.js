@@ -796,6 +796,15 @@ io.on('connection', (socket) => {
   });
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    service: 'dental-calendar',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Serve main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

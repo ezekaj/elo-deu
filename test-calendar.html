@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calendar Debug Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+</head>
+<body>
+    <h1>Calendar Debug Test</h1>
+    <div id="test-output"></div>
+    <div id="calendar" style="max-width: 900px; margin: 20px auto;"></div>
+    
+    <script>
+        const output = document.getElementById('test-output');
+        
+        // Test API endpoint
+        const apiUrl = 'https://772ec752906e.ngrok-free.app/api/appointments';
+        
+        output.innerHTML = '<p>Testing API: ' + apiUrl + '</p>';
+        
+        fetch(apiUrl, {
+            headers: {
+                'ngrok-skip-browser-warning': 'true'
+            }
+        })
+        .then(response => {
+            output.innerHTML += '<p>Response status: ' + response.status + '</p>';
+            return response.json();
+        })
+        .then(data => {
+            output.innerHTML += '<p>Appointments found: ' + data.length + '</p>';
+            output.innerHTML += '<pre>' + JSON.stringify(data.slice(0, 3), null, 2) + '</pre>';
+            
+            // Initialize calendar with the data
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'de',
+                events: data,
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                }
+            });
+            calendar.render();
+        })
+        .catch(error => {
+            output.innerHTML += '<p style="color: red;">Error: ' + error + '</p>';
+        });
+    </script>
+</body>
+</html>
