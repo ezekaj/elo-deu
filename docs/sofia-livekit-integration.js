@@ -13,7 +13,8 @@ class SofiaLiveKitIntegration {
         this.isListening = false;
         
         // LiveKit configuration
-        this.livekitUrl = 'ws://localhost:7880'; // Default LiveKit URL
+        const CONFIG = window.SOFIA_CONFIG || {};
+        this.livekitUrl = CONFIG.LIVEKIT_URL || 'ws://localhost:7880'; // Use configured URL
         this.token = null;
         
         // UI elements

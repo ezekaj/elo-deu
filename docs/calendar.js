@@ -1,6 +1,12 @@
 let calendar;
 let socket;
 
+// Get configuration
+const CONFIG = window.SOFIA_CONFIG || {
+    API_BASE_URL: 'http://localhost:3005',
+    WS_URL: 'ws://localhost:3005'
+};
+
 // Initialize everything when page loads
 document.addEventListener('DOMContentLoaded', function() {
     initializeSocket();
@@ -9,7 +15,14 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeSocket() {
-    socket = io();
+    // Use configured WebSocket URL
+    const wsUrl = CONFIG.WS_URL || CONFIG.API_BASE_URL;
+    socket = io(wsUrl, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+    });
     
     socket.on('connect', function() {
         console.log('Connected to server');
@@ -68,7 +81,7 @@ function initializeCalendar() {
             endTime: '18:00'
         },
         height: 'auto',
-        events: '/api/appointments',
+        events: CONFIG.API_BASE_URL + '/api/appointments',
         
         // Event styling
         eventDisplay: 'block',
@@ -164,7 +177,7 @@ function createAppointment() {
         notes: document.getElementById('notes').value
     };
     
-    fetch('/api/appointments', {
+    fetch(CONFIG.API_BASE_URL + '/api/appointments', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -210,7 +223,7 @@ function showAppointmentDetails(event) {
 }
 
 function deleteAppointment(appointmentId) {
-    fetch(`/api/appointments/${appointmentId}`, {
+    fetch(`${CONFIG.API_BASE_URL}/api/appointments/${appointmentId}`, {
         method: 'DELETE'
     })
     .then(response => response.json())
@@ -233,7 +246,7 @@ function updateAppointmentTime(event) {
     const newTime = event.start.toISOString().split('T')[1].substring(0, 5);
     const endTime = event.end ? event.end.toISOString().split('T')[1].substring(0, 5) : calculateEndTime(newTime, 30);
     
-    fetch(`/api/appointments/${event.id}`, {
+    fetch(`${CONFIG.API_BASE_URL}/api/appointments/${event.id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
