@@ -2,10 +2,24 @@ let calendar;
 let socket;
 
 // Get configuration
-const CONFIG = window.SOFIA_CONFIG || {
+let CONFIG = window.SOFIA_CONFIG || {
     API_BASE_URL: 'http://localhost:3005',
     WS_URL: 'ws://localhost:3005'
 };
+
+// Override with ngrok URL if not on localhost
+if (window.location.hostname !== 'localhost' && CONFIG.API_BASE_URL.includes('localhost')) {
+    console.log('Calendar.js - Overriding localhost URL with ngrok URL');
+    CONFIG = {
+        ...CONFIG,
+        API_BASE_URL: 'https://772ec752906e.ngrok-free.app',
+        WS_URL: 'wss://772ec752906e.ngrok-free.app'
+    };
+}
+
+// Log configuration for debugging
+console.log('Calendar.js - CONFIG loaded:', CONFIG);
+console.log('Calendar.js - API_BASE_URL:', CONFIG.API_BASE_URL);
 
 // Initialize everything when page loads
 document.addEventListener('DOMContentLoaded', function() {
