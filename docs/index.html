@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofia Dental Assistant - elosofia.site</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+        .sofia-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            margin: 20px 10px;
+        }
+        .sofia-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+        .sofia-button:active {
+            transform: translateY(0);
+        }
+        .status {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            display: none;
+        }
+        .status.active {
+            display: block;
+        }
+        .status.connecting {
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+        .status.connected {
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        .status.error {
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        .features {
+            text-align: left;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .features h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+        .features li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        .features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .demo-note {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f4fd;
+            border-radius: 10px;
+            border-left: 4px solid #0066cc;
+            text-align: left;
+        }
+        .demo-note h4 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦷 Sofia Dental Assistant</h1>
+        <p class="subtitle">Ihre intelligente Sprachassistentin für Zahnarzttermine</p>
+        
+        <div class="features">
+            <h3>Was kann Sofia?</h3>
+            <ul>
+                <li>Termine vereinbaren und verwalten</li>
+                <li>Patienteninformationen abrufen</li>
+                <li>Behandlungspläne besprechen</li>
+                <li>Terminerinnerungen erstellen</li>
+                <li>Notfalltermine koordinieren</li>
+            </ul>
+        </div>
+
+        <button class="sofia-button" onclick="connectToSofia()">
+            🎤 Mit Sofia sprechen
+        </button>
+
+        <button class="sofia-button" onclick="window.open('http://46.5.138.40:5000', '_blank')">
+            📊 CRM Dashboard
+        </button>
+
+        <div id="status" class="status"></div>
+
+        <div class="demo-note">
+            <h4>🔧 Demo-Modus</h4>
+            <p>Sofia läuft auf einem privaten Server. Für die Sprachfunktion benötigen Sie Zugriff auf:</p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Voice Server: <code>ws://46.5.138.40:7880</code></li>
+                <li>API Server: <code>http://46.5.138.40:3005</code></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const LIVEKIT_URL = 'ws://46.5.138.40:7880';
+        const API_URL = 'http://46.5.138.40:3005';
+        
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status active ' + type;
+        }
+
+        async function connectToSofia() {
+            updateStatus('Verbinde mit Sofia Server...', 'connecting');
+            
+            // Since we can't directly connect to ws:// from https:// GitHub Pages,
+            // we'll show instructions
+            setTimeout(() => {
+                updateStatus('Sofia benötigt eine direkte Verbindung. Bitte nutzen Sie die lokale Installation oder kontaktieren Sie uns für eine Demo.', 'error');
+            }, 2000);
+        }
+
+        // Check if we're on GitHub Pages
+        if (window.location.hostname.includes('github.io') || window.location.hostname === 'elosofia.site') {
+            console.log('Running on GitHub Pages - WebSocket connections to non-SSL servers are restricted');
+        }
+    </script>
+</body>
+</html>
