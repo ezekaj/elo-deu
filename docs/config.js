@@ -4,27 +4,27 @@
  */
 
 window.SOFIA_CONFIG = {
-    // API Endpoints - using elosofia.site domain
+    // API Endpoints - using ngrok tunnels for demo
     API_BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3005' 
-        : 'https://elosofia.site',
+        : 'https://60677a0a946c.ngrok-free.app',
     
     CRM_URL: window.location.hostname === 'localhost'
         ? 'http://localhost:5000'
-        : 'https://crm.elosofia.site',
+        : 'https://60677a0a946c.ngrok-free.app',
     
     LIVEKIT_URL: window.location.hostname === 'localhost'
         ? 'ws://localhost:7880'
-        : 'wss://ws.elosofia.site',
+        : 'wss://90a181b53efb.ngrok-free.app',
     
     LIVEKIT_API_URL: window.location.hostname === 'localhost'
         ? 'http://localhost:7880'
-        : 'https://ws.elosofia.site',
+        : 'https://90a181b53efb.ngrok-free.app',
     
     // WebSocket for real-time updates
     WS_URL: window.location.hostname === 'localhost'
         ? 'ws://localhost:3005'
-        : 'wss://elosofia.site',
+        : 'wss://60677a0a946c.ngrok-free.app',
     
     // Environment
     ENVIRONMENT: window.location.hostname === 'localhost' ? 'development' : 'production',
