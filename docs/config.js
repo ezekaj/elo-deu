@@ -4,17 +4,27 @@
  */
 
 window.SOFIA_CONFIG = {
-    // API Endpoints - using local URLs for PC version
-    API_BASE_URL: 'http://localhost:3005',
+    // API Endpoints - using elosofia.site domain
+    API_BASE_URL: window.location.hostname === 'localhost' 
+        ? 'http://localhost:3005' 
+        : 'https://elosofia.site',
     
-    CRM_URL: 'http://localhost:5000',
+    CRM_URL: window.location.hostname === 'localhost'
+        ? 'http://localhost:5000'
+        : 'https://crm.elosofia.site',
     
-    LIVEKIT_URL: 'ws://localhost:7880',
+    LIVEKIT_URL: window.location.hostname === 'localhost'
+        ? 'ws://localhost:7880'
+        : 'wss://ws.elosofia.site',
     
-    LIVEKIT_API_URL: 'http://localhost:7880',
+    LIVEKIT_API_URL: window.location.hostname === 'localhost'
+        ? 'http://localhost:7880'
+        : 'https://ws.elosofia.site',
     
     // WebSocket for real-time updates
-    WS_URL: 'ws://localhost:3005',
+    WS_URL: window.location.hostname === 'localhost'
+        ? 'ws://localhost:3005'
+        : 'wss://elosofia.site',
     
     // Environment
     ENVIRONMENT: window.location.hostname === 'localhost' ? 'development' : 'production',
