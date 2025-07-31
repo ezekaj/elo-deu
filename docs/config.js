@@ -4,27 +4,17 @@
  */
 
 window.SOFIA_CONFIG = {
-    // API Endpoints - will use Ngrok tunnels when running from GitHub Pages
-    API_BASE_URL: window.location.hostname === 'localhost' 
-        ? 'http://localhost:3005' 
-        : 'https://772ec752906e.ngrok-free.app',
+    // API Endpoints - using local URLs for PC version
+    API_BASE_URL: 'http://localhost:3005',
     
-    CRM_URL: window.location.hostname === 'localhost'
-        ? 'http://localhost:5000'
-        : 'https://3358fa3712d6.ngrok-free.app',
+    CRM_URL: 'http://localhost:5000',
     
-    LIVEKIT_URL: window.location.hostname === 'localhost'
-        ? 'ws://localhost:7880'
-        : 'wss://9608f5535742.ngrok-free.app',
+    LIVEKIT_URL: 'ws://localhost:7880',
     
-    LIVEKIT_API_URL: window.location.hostname === 'localhost'
-        ? 'http://localhost:7880'
-        : 'https://9608f5535742.ngrok-free.app',
+    LIVEKIT_API_URL: 'http://localhost:7880',
     
     // WebSocket for real-time updates
-    WS_URL: window.location.hostname === 'localhost'
-        ? 'ws://localhost:3005'
-        : 'wss://772ec752906e.ngrok-free.app',
+    WS_URL: 'ws://localhost:3005',
     
     // Environment
     ENVIRONMENT: window.location.hostname === 'localhost' ? 'development' : 'production',
