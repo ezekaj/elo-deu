@@ -42,14 +42,20 @@ cd "$DEPLOY_DIR"
 # Download deployment files
 echo "📥 Downloading deployment files..."
 if command -v git &> /dev/null; then
-    git clone https://github.com/elodisney/sofia-deployment.git . || {
+    git clone https://github.com/ezekaj/elo-deu.git . || {
         echo "Git clone failed, downloading as archive..."
-        wget -O deployment.tar.gz https://github.com/elodisney/sofia-deployment/archive/main.tar.gz
+        wget -O deployment.tar.gz https://github.com/ezekaj/elo-deu/archive/master.tar.gz
         tar -xzf deployment.tar.gz --strip-components=1
     }
 else
     apt-get update && apt-get install -y git
-    git clone https://github.com/elodisney/sofia-deployment.git .
+    git clone https://github.com/ezekaj/elo-deu.git .
+fi
+
+# Move to deployment directory
+if [ -d "deployment" ]; then
+    cp -r deployment/* .
+    cp -r deployment/.* . 2>/dev/null || true
 fi
 
 # Generate secure passwords
@@ -68,11 +74,9 @@ echo
 echo "🔑 Please provide your API keys:"
 echo
 
-read -p "OpenAI API Key (sk-...): " OPENAI_API_KEY
-export OPENAI_API_KEY
-
-read -p "Deepgram API Key: " DEEPGRAM_API_KEY
-export DEEPGRAM_API_KEY
+# Use Gemini API key instead of OpenAI
+read -p "Google Gemini API Key (AIza...): " GOOGLE_API_KEY
+export GOOGLE_API_KEY="${GOOGLE_API_KEY:-AIzaSyCGXSa68qIQNtp8WEH_zYFF3UjIHS4EW2M}"
 
 read -p "LiveKit API Key (optional, press Enter to skip): " LIVEKIT_API_KEY
 export LIVEKIT_API_KEY="${LIVEKIT_API_KEY:-devkey}"
@@ -80,8 +84,8 @@ export LIVEKIT_API_KEY="${LIVEKIT_API_KEY:-devkey}"
 read -p "LiveKit API Secret (optional, press Enter to skip): " LIVEKIT_API_SECRET
 export LIVEKIT_API_SECRET="${LIVEKIT_API_SECRET:-secret}"
 
-read -p "GitHub Personal Access Token (for private repos): " GITHUB_TOKEN
-export GITHUB_TOKEN
+# GitHub token not needed for public repo
+export GITHUB_TOKEN=""
 
 # Save credentials
 echo "💾 Saving credentials..."
@@ -98,8 +102,7 @@ export JWT_SECRET="$JWT_SECRET"
 export LIVEKIT_API_KEY="$LIVEKIT_API_KEY"
 export LIVEKIT_API_SECRET="$LIVEKIT_API_SECRET"
 export LIVEKIT_WEBHOOK_KEY="$LIVEKIT_WEBHOOK_KEY"
-export OPENAI_API_KEY="$OPENAI_API_KEY"
-export DEEPGRAM_API_KEY="$DEEPGRAM_API_KEY"
+export GOOGLE_API_KEY="$GOOGLE_API_KEY"
 export TURN_USERNAME="$TURN_USERNAME"
 export TURN_PASSWORD="$TURN_PASSWORD"
 export GITHUB_TOKEN="$GITHUB_TOKEN"
