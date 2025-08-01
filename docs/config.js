@@ -53,10 +53,9 @@ window.SOFIA_CONFIG = {
 };
 
 // Log configuration
-console.log('Sofia Configuration Fixed:', {
+console.log('Sofia Configuration:', {
     environment: window.SOFIA_CONFIG.ENVIRONMENT,
     apiBase: window.CONFIG.API_BASE_URL,
     wsUrl: window.CONFIG.WS_URL,
-    isGitHubPages: isGitHubPages,
     currentDomain: window.location.hostname
 });
