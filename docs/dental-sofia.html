@@ -97,6 +97,7 @@
             
             // Check all possible locations
             const possibleSDKs = [
+                { name: 'window.LivekitClient', obj: window.LivekitClient },
                 { name: 'window.LiveKitClient', obj: window.LiveKitClient },
                 { name: 'window.livekit', obj: window.livekit },
                 { name: 'window.LiveKit', obj: window.LiveKit }
@@ -111,6 +112,14 @@
             }
             
             updateStatus('LiveKit SDK not found in any location!', true);
+            
+            // Try one more time with correct case
+            if (window.LivekitClient) {
+                updateStatus('Found SDK at window.LivekitClient (correct case)');
+                window.LiveKitClient = window.LivekitClient;
+                return true;
+            }
+            
             throw new Error('LiveKit SDK not available');
         }
         
@@ -173,7 +182,12 @@
                 updateStatus(`Token received for room: ${tokenData.roomName}`);
                 
                 updateStatus('Creating LiveKit room...');
-                room = new window.LiveKitClient.Room({
+                // Ensure we have the correct SDK reference
+                const SDK = window.LiveKitClient || window.LivekitClient;
+                if (!SDK || !SDK.Room) {
+                    throw new Error('LiveKit SDK Room constructor not found');
+                }
+                room = new SDK.Room({
                     adaptiveStream: true,
                     dynacast: true
                 });
@@ -186,7 +200,8 @@
                     
                     try {
                         updateStatus('Creating local audio track...');
-                        audioTrack = await window.LiveKitClient.createLocalAudioTrack();
+                        const SDK = window.LiveKitClient || window.LivekitClient;
+                        audioTrack = await SDK.createLocalAudioTrack();
                         
                         updateStatus('Publishing audio track...');
                         await room.localParticipant.publishTrack(audioTrack);

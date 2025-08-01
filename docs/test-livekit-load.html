@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LiveKit SDK Load Test</title>
+</head>
+<body>
+    <h1>LiveKit SDK Load Test</h1>
+    <div id="status">Testing SDK loading...</div>
+    
+    <script>
+        console.log('=== LIVEKIT SDK LOAD TEST ===');
+        console.log('1. Initial window check:', {
+            'window.LiveKitClient': typeof window.LiveKitClient,
+            'window.livekit': typeof window.livekit,
+            'window.LiveKit': typeof window.LiveKit
+        });
+        
+        // Method 1: Script tag
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.js';
+        
+        script.onload = function() {
+            console.log('2. Script loaded event fired');
+            
+            // Check immediately
+            console.log('3. Immediate check after load:', {
+                'window.LiveKitClient': typeof window.LiveKitClient,
+                'window.livekit': typeof window.livekit,
+                'window.LiveKit': typeof window.LiveKit
+            });
+            
+            // Check all window properties
+            const livekitKeys = Object.keys(window).filter(k => k.toLowerCase().includes('live'));
+            console.log('4. Window properties containing "live":', livekitKeys);
+            
+            // Check after delay
+            setTimeout(() => {
+                console.log('5. After 1s delay:', {
+                    'window.LiveKitClient': typeof window.LiveKitClient,
+                    'window.livekit': typeof window.livekit,
+                    'window.LiveKit': typeof window.LiveKit
+                });
+                
+                // Try to find the SDK
+                if (window.livekit) {
+                    console.log('6. Found window.livekit:', window.livekit);
+                    document.getElementById('status').innerHTML = '✅ SDK loaded as window.livekit';
+                    
+                    // Try to create a Room
+                    try {
+                        const room = new window.livekit.Room();
+                        console.log('7. Room created successfully:', room);
+                        document.getElementById('status').innerHTML += '<br>✅ Room object created!';
+                    } catch (e) {
+                        console.error('7. Error creating room:', e);
+                    }
+                } else if (window.LiveKitClient) {
+                    console.log('6. Found window.LiveKitClient:', window.LiveKitClient);
+                    document.getElementById('status').innerHTML = '✅ SDK loaded as window.LiveKitClient';
+                } else {
+                    console.error('6. SDK not found!');
+                    document.getElementById('status').innerHTML = '❌ SDK not found in any expected location';
+                    
+                    // Last resort - check entire window
+                    console.log('7. Checking entire window object...');
+                    for (let key in window) {
+                        if (key.toLowerCase().includes('livekit') || 
+                            (window[key] && typeof window[key] === 'object' && window[key].Room)) {
+                            console.log(`Found potential SDK at window.${key}:`, window[key]);
+                        }
+                    }
+                }
+            }, 1000);
+        };
+        
+        script.onerror = function(e) {
+            console.error('Script load error:', e);
+            document.getElementById('status').innerHTML = '❌ Failed to load script';
+        };
+        
+        document.head.appendChild(script);
+        console.log('Script tag added to document');
+    </script>
+</body>
+</html>
