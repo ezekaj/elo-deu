@@ -1,30 +1,30 @@
 /**
  * Dynamic Configuration for Sofia Dental Calendar
- * This file configures the API endpoints based on environment
+ * Using ngrok tunnel for global access
  */
 
 window.SOFIA_CONFIG = {
-    // API Endpoints - using Cloudflare tunnels
+    // API Endpoints - using ngrok tunnel
     API_BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3005' 
-        : 'https://substantially-attempted-thai-pn.trycloudflare.com',
+        : 'https://e13f48333e1e.ngrok-free.app',
     
     CRM_URL: window.location.hostname === 'localhost'
         ? 'http://localhost:5000'
-        : 'https://substantially-attempted-thai-pn.trycloudflare.com',
+        : 'https://e13f48333e1e.ngrok-free.app',
     
     LIVEKIT_URL: window.location.hostname === 'localhost'
         ? 'ws://localhost:7880'
-        : 'wss://vt-frog-dem-limitations.trycloudflare.com',  // Direct LiveKit tunnel
+        : 'wss://e13f48333e1e.ngrok-free.app/livekit-proxy',  // Using proxy through ngrok
     
     LIVEKIT_API_URL: window.location.hostname === 'localhost'
         ? 'http://localhost:7880'
-        : 'https://vt-frog-dem-limitations.trycloudflare.com',
+        : 'https://e13f48333e1e.ngrok-free.app',
     
     // WebSocket for real-time updates
     WS_URL: window.location.hostname === 'localhost'
         ? 'ws://localhost:3005'
-        : 'wss://substantially-attempted-thai-pn.trycloudflare.com',
+        : 'wss://e13f48333e1e.ngrok-free.app',
     
     // Environment
     ENVIRONMENT: window.location.hostname === 'localhost' ? 'development' : 'production',
