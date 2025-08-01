@@ -7,7 +7,7 @@
 const VPS_CONFIG = {
     // Replace with your VPS IP or domain
     VPS_IP: '167.235.67.1',  // Your Hetzner VPS
-    USE_HTTPS: false         // Set to true after SSL setup
+    USE_HTTPS: true          // SSL is now enabled
 };
 
 // Determine environment
