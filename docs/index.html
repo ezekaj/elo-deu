@@ -8,6 +8,9 @@
     <!-- Dynamic Configuration -->
     <script src="config.js"></script>
     
+    <!-- LiveKit SDK -->
+    <script src="https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.js"></script>
+    
     <!-- FullCalendar CSS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
     
@@ -473,8 +476,13 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     
     <script src="calendar.js"></script>
-    <script src="sofia-real-connection.js"></script>
+    <!-- Temporarily disabled due to LiveKit authentication issues -->
+    <!-- <script src="sofia-real-connection.js"></script>
     <script src="sofia-enhanced-connection.js"></script>
-    <script src="sofia-tcp-connection.js"></script>
+    <script src="sofia-tcp-connection.js"></script> -->
+    <script src="sofia-voice-simple.js"></script>
+    <script src="sofia-direct-connection.js"></script>
+    <script src="sofia-turn-solution.js"></script>
+    <script src="sofia-final-fix.js"></script>
 </body>
 </html>
