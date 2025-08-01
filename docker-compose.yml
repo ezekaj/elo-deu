@@ -98,7 +98,7 @@ services:
       context: .
       dockerfile: Dockerfile.web
     ports:
-      - "5001:5001"
+      - "5002:5001"
     depends_on:
       - dental-calendar
       - sofia-agent

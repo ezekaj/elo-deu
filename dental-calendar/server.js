@@ -654,9 +654,20 @@ app.post('/api/sofia/connect', async (req, res) => {
       await triggerSofiaManually(roomName);
     }, 5000);
     
+    // Determine if this is an external request
+    const isExternal = req.headers.host?.includes('ngrok') || 
+                      req.headers['x-forwarded-host']?.includes('ngrok') ||
+                      req.headers.origin?.includes('ngrok') ||
+                      req.headers.origin?.includes('elosofia');
+    
+    // Use ngrok URL for external requests, local URL for internal
+    const livekitUrl = isExternal 
+      ? 'wss://0ac90f1eb152.ngrok-free.app/livekit'  // WebSocket proxy path
+      : (process.env.LIVEKIT_URL || 'ws://localhost:7880');
+    
     res.json({
       token: token,
-      url: process.env.LIVEKIT_URL || 'ws://localhost:7880',
+      url: livekitUrl,
       roomName: roomName
     });
   } catch (error) {
@@ -810,8 +821,35 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// WebSocket proxy for LiveKit when accessed through ngrok
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
+// Only set up proxy if we detect ngrok environment
+if (process.env.NGROK_URL || process.env.EXTERNAL_ACCESS) {
+  const wsProxy = createProxyMiddleware('/livekit', {
+    target: process.env.LIVEKIT_URL || 'ws://localhost:7880',
+    ws: true,
+    changeOrigin: true,
+    pathRewrite: {
+      '^/livekit': ''
+    },
+    onError: (err, req, res) => {
+      console.error('WebSocket proxy error:', err);
+    },
+    onProxyReqWs: (proxyReq, req, socket, options, head) => {
+      console.log('WebSocket connection proxied to LiveKit');
+    }
+  });
+  
+  app.use('/livekit', wsProxy);
+  server.on('upgrade', wsProxy.upgrade);
+}
+
 const PORT = process.env.PORT || 3005;
 server.listen(PORT, () => {
   console.log(`Dental Calendar Server running on http://localhost:${PORT}`);
   console.log('Sofia Webhook: POST /api/sofia/appointment');
+  if (process.env.NGROK_URL) {
+    console.log(`External access via: ${process.env.NGROK_URL}`);
+  }
 });

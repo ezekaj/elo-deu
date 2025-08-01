@@ -1,15 +1,37 @@
 version: "2"
 authtoken: YOUR_AUTH_TOKEN
 tunnels:
-  sofia-web:
+  # Dental Calendar Service (Main Web Interface)
+  calendar:
     proto: http
     addr: 3005
     inspect: false
-  sofia-ws:
+    subdomain: elosofia-calendar
+    
+  # LiveKit Server (WebSocket for Voice)
+  livekit:
     proto: http
     addr: 7880
     inspect: false
+    subdomain: elosofia-livekit
+    
+  # Sofia Agent Health Check & API
+  sofia-agent:
+    proto: http
+    addr: 8080
+    inspect: false
+    subdomain: elosofia-sofia
+    
+  # CRM Dashboard
   crm:
     proto: http
     addr: 5000
     inspect: false
+    subdomain: elosofia-crm
+    
+  # Sofia Web Interface
+  sofia-web:
+    proto: http
+    addr: 5002
+    inspect: false
+    subdomain: elosofia-web
