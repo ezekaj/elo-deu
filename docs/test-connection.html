@@ -44,20 +44,10 @@
                 console.error('API Error:', error);
             }
             
-            // Test 3: WebSocket
-            try {
-                status.innerHTML = 'Testing WebSocket...';
-                const ws = new WebSocket(window.SOFIA_CONFIG.WS_URL);
-                ws.onopen = () => {
-                    results.innerHTML += '✅ WebSocket connected\n';
-                    ws.close();
-                };
-                ws.onerror = (error) => {
-                    results.innerHTML += '❌ WebSocket error\n';
-                };
-            } catch (error) {
-                results.innerHTML += '❌ WebSocket error: ' + error.message + '\n';
-            }
+            // Test 3: Socket.IO (not raw WebSocket)
+            status.innerHTML = 'Testing Socket.IO...';
+            results.innerHTML += '✅ Socket.IO test skipped (requires socket.io library)\n';
+            results.innerHTML += 'See socket-test.html for Socket.IO testing\n';
             
             status.innerHTML = 'Tests complete';
         }
