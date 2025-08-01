@@ -6,8 +6,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const { AccessToken } = require('livekit-server-sdk');
-const WebSocket = require('ws');
-const url = require('url');
+// WebSocket proxy not needed for VPS deployment
 require('dotenv').config();
 
 const app = express();
@@ -27,98 +26,12 @@ console.log('Socket.IO server initialized');
 // Middleware
 app.use(cors());
 
-// Skip ngrok browser warning
-app.use((req, res, next) => {
-  res.setHeader('ngrok-skip-browser-warning', 'true');
-  next();
-});
+// CORS is sufficient for VPS deployment
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Simple WebSocket proxy for LiveKit
-const livekitTarget = process.env.LIVEKIT_URL || 'ws://localhost:7880';
-
-// Create a WebSocket server for proxying
-const wss = new WebSocket.Server({ noServer: true });
-
-wss.on('connection', (clientWs, request) => {
-  console.log('🔄 New WebSocket proxy connection to LiveKit');
-  console.log('Request URL:', request.url);
-  console.log('Request headers:', request.headers);
-  
-  // Create connection to LiveKit
-  // Extract the actual path after /livekit-proxy
-  const targetPath = request.url.replace('/livekit-proxy', '') || '';
-  // LiveKit expects /rtc for WebSocket connections
-  const targetUrl = livekitTarget + (targetPath || '/rtc');
-  console.log('Target URL:', targetUrl);
-  console.log('Headers:', JSON.stringify(request.headers, null, 2));
-  
-  // Forward important headers
-  const headers = {
-    'User-Agent': request.headers['user-agent'] || 'LiveKit-Proxy/1.0',
-  };
-  
-  // Forward WebSocket protocol if present
-  if (request.headers['sec-websocket-protocol']) {
-    headers['Sec-WebSocket-Protocol'] = request.headers['sec-websocket-protocol'];
-  }
-  
-  // Forward authorization if present
-  if (request.headers['authorization']) {
-    headers['Authorization'] = request.headers['authorization'];
-  }
-  
-  // Create WebSocket with options
-  const wsOptions = {
-    headers: headers,
-    perMessageDeflate: false,
-    followRedirects: true
-  };
-  
-  const livekitWs = new WebSocket(targetUrl, wsOptions);
-  
-  // Handle LiveKit connection open
-  livekitWs.on('open', () => {
-    console.log('✅ Connected to LiveKit server');
-    // If LiveKit accepted a subprotocol, relay it back to client
-    if (livekitWs.protocol) {
-      clientWs.protocol = livekitWs.protocol;
-    }
-  });
-  
-  // Proxy messages from client to LiveKit
-  clientWs.on('message', (data) => {
-    if (livekitWs.readyState === WebSocket.OPEN) {
-      livekitWs.send(data);
-    }
-  });
-  
-  // Proxy messages from LiveKit to client
-  livekitWs.on('message', (data) => {
-    if (clientWs.readyState === WebSocket.OPEN) {
-      clientWs.send(data);
-    }
-  });
-  
-  // Handle errors
-  clientWs.on('error', (err) => console.error('Client WS error:', err));
-  livekitWs.on('error', (err) => {
-    console.error('LiveKit WS error:', err);
-    clientWs.close(1001, 'LiveKit connection failed');
-  });
-  
-  // Handle close
-  clientWs.on('close', (code, reason) => {
-    console.log('Client disconnected:', code, reason);
-    livekitWs.close();
-  });
-  livekitWs.on('close', (code, reason) => {
-    console.log('LiveKit disconnected:', code, reason);
-    clientWs.close();
-  });
-});
+// VPS deployment - no proxy needed, direct connections work!
 
 // Database setup
 const db = new sqlite3.Database('./dental_calendar.db');
@@ -755,16 +668,8 @@ app.post('/api/sofia/connect', async (req, res) => {
       await triggerSofiaManually(roomName);
     }, 5000);
     
-    // Determine if this is an external request
-    const isExternal = req.headers.host?.includes('ngrok') || 
-                      req.headers['x-forwarded-host']?.includes('ngrok') ||
-                      req.headers.origin?.includes('ngrok') ||
-                      req.headers.origin?.includes('elosofia');
-    
-    // Use ngrok URL for external requests, local URL for internal
-    const livekitUrl = isExternal 
-      ? 'wss://0ac90f1eb152.ngrok-free.app/livekit-proxy'  // WebSocket proxy path
-      : (process.env.LIVEKIT_URL || 'ws://localhost:7880');
+    // VPS deployment - always use direct LiveKit connection
+    const livekitUrl = process.env.LIVEKIT_URL || 'ws://localhost:7880';
     console.log(`📡 Sofia connect - Using LiveKit URL: ${livekitUrl}`);
     
     res.json({
@@ -934,14 +839,8 @@ app.post('/api/sofia/token', async (req, res) => {
       roomName
     );
     
-    // For external clients, use the proxied URL through ngrok
-    const isExternalRequest = req.headers['ngrok-skip-browser-warning'] === 'true' || 
-                            req.headers.host?.includes('ngrok') ||
-                            req.headers.origin?.includes('https');
-    
-    const livekitUrl = isExternalRequest 
-      ? 'wss://0ac90f1eb152.ngrok-free.app/livekit-proxy'
-      : (process.env.LIVEKIT_URL || 'ws://localhost:7880');
+    // VPS deployment - direct connection
+    const livekitUrl = process.env.LIVEKIT_URL || 'ws://localhost:7880';
     
     console.log(`🎟️ Generated debug token for ${participant_name} in room ${roomName} (URL: ${livekitUrl})`);
     
@@ -966,15 +865,4 @@ server.listen(PORT, () => {
   }
 });
 
-// Handle WebSocket upgrade for LiveKit proxy
-server.on('upgrade', (request, socket, head) => {
-  const pathname = url.parse(request.url).pathname;
-  
-  if (pathname.startsWith('/livekit-proxy')) {
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit('connection', ws, request);
-    });
-  } else {
-    socket.destroy();
-  }
-});
+// VPS deployment - no WebSocket proxy needed

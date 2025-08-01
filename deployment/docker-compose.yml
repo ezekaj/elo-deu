@@ -1,0 +1,135 @@
+version: '3.8'
+
+services:
+  dental-calendar:
+    image: dental-calendar:latest
+    container_name: dental-calendar
+    build:
+      context: ./dental-calendar
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:3005:3005"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/dental_calendar
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - LIVEKIT_WS_URL=wss://${DOMAIN_NAME}/livekit
+    depends_on:
+      - postgres
+      - livekit
+    restart: unless-stopped
+    networks:
+      - sofia-network
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: livekit
+    ports:
+      - "7880:7880"  # HTTP API
+      - "7881:7881"  # WebRTC TCP
+      - "50000-60000:50000-60000/udp"  # WebRTC UDP
+    environment:
+      - LIVEKIT_KEYS=${LIVEKIT_API_KEY}:${LIVEKIT_API_SECRET}
+      - LIVEKIT_WEBHOOK_API_KEY=${LIVEKIT_WEBHOOK_KEY}
+      - LIVEKIT_TURN_ENABLED=true
+      - LIVEKIT_REDIS_HOST=redis:6379
+      - LIVEKIT_NODE_IP=${VPS_PUBLIC_IP}
+      - LIVEKIT_BIND_ADDRESSES=0.0.0.0
+      - LIVEKIT_RTC_CONFIG={"iceServers":[{"urls":["stun:stun.l.google.com:19302"]},{"urls":["turn:${DOMAIN_NAME}:3478"],"username":"${TURN_USERNAME}","credential":"${TURN_PASSWORD}"}]}
+    volumes:
+      - ./configs/livekit.yaml:/livekit.yaml
+    command: --config /livekit.yaml
+    restart: unless-stopped
+    networks:
+      - sofia-network
+
+  sofia-agent:
+    image: sofia-agent:latest
+    container_name: sofia-agent
+    build:
+      context: ./sofia-agent
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - NODE_ENV=production
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - LIVEKIT_WS_URL=wss://${DOMAIN_NAME}/livekit
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - livekit
+      - redis
+    restart: unless-stopped
+    networks:
+      - sofia-network
+
+  crm:
+    image: crm:latest
+    container_name: crm
+    build:
+      context: ./crm
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/crm
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - sofia-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=dental_calendar
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "127.0.0.1:5432:5432"
+    restart: unless-stopped
+    networks:
+      - sofia-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    restart: unless-stopped
+    networks:
+      - sofia-network
+
+  coturn:
+    image: coturn/coturn:latest
+    container_name: coturn
+    network_mode: host
+    environment:
+      - TURN_USERNAME=${TURN_USERNAME}
+      - TURN_PASSWORD=${TURN_PASSWORD}
+    volumes:
+      - ./configs/turnserver.conf:/etc/coturn/turnserver.conf
+    command: -c /etc/coturn/turnserver.conf
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  sofia-network:
+    driver: bridge

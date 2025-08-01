@@ -1,28 +1,36 @@
 /**
  * Sofia Dental Calendar Configuration
- * Updated with new ngrok URL
+ * VPS Deployment Configuration
  */
 
-// Determine if we're on the GitHub Pages site or local
-const isGitHubPages = window.location.hostname === 'elosofia.site';
+// VPS Configuration - Update these when you have your VPS
+const VPS_CONFIG = {
+    // Replace with your VPS IP or domain
+    VPS_IP: 'YOUR_VPS_IP',  // e.g., '123.456.789.0' or 'api.elosofia.site'
+    USE_HTTPS: false        // Set to true after SSL setup
+};
+
+// Determine environment
 const isLocalhost = window.location.hostname === 'localhost';
+const protocol = VPS_CONFIG.USE_HTTPS ? 'https' : 'http';
+const wsProtocol = VPS_CONFIG.USE_HTTPS ? 'wss' : 'ws';
 
 // Create CONFIG object
 window.CONFIG = {
-    // API endpoints - GitHub Pages needs to use ngrok
-    API_BASE_URL: isGitHubPages 
-        ? 'https://0ac90f1eb152.ngrok-free.app'  // Current ngrok URL
-        : (isLocalhost ? 'http://localhost:3005' : window.location.origin),
+    // API endpoints
+    API_BASE_URL: isLocalhost 
+        ? 'http://localhost:3005'
+        : `${protocol}://${VPS_CONFIG.VPS_IP}:3005`,
     
     // WebSocket URL
-    WS_URL: isGitHubPages 
-        ? 'wss://0ac90f1eb152.ngrok-free.app'
-        : (isLocalhost ? 'ws://localhost:3005' : window.location.origin.replace('https:', 'wss:').replace('http:', 'ws:')),
+    WS_URL: isLocalhost 
+        ? 'ws://localhost:3005'
+        : `${wsProtocol}://${VPS_CONFIG.VPS_IP}:3005`,
     
-    // LiveKit configuration - for GitHub Pages, use proxy through ngrok
-    LIVEKIT_URL: isGitHubPages
-        ? 'wss://0ac90f1eb152.ngrok-free.app/livekit-proxy'
-        : 'ws://localhost:7880',
+    // LiveKit configuration - Direct connection, no proxy needed!
+    LIVEKIT_URL: isLocalhost
+        ? 'ws://localhost:7880'
+        : `${wsProtocol}://${VPS_CONFIG.VPS_IP}:7880`,
     
     // Features
     DEMO_MODE: false,

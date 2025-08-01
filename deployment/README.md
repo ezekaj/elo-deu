@@ -1,196 +1,117 @@
-# Sofia AI - Quick Deployment Guide
+# Sofia Dental Calendar - VPS Deployment Package
 
-## 🚀 Deploy in Under 2 Hours
+This package contains everything needed to deploy the Sofia Dental Calendar system on a Hetzner VPS with full WebRTC voice support.
 
-This guide helps you deploy Sofia AI's voice mode for investor demos using managed services.
+## 🚀 Quick Start
 
-## Prerequisites (30 minutes)
-
-1. **LiveKit Cloud Account**
-   - Sign up at https://cloud.livekit.io
-   - Create a project and get credentials
-
-2. **Railway Account**
-   - Sign up at https://railway.app
-   - Add a payment method (required for deployment)
-
-3. **Google Cloud API Key**
-   - Get from https://console.cloud.google.com
-   - Enable Speech-to-Text API
-
-## Quick Start (1 hour)
-
-### Option 1: Automated Deployment
+For the fastest deployment on a fresh Ubuntu 22.04 VPS:
 
 ```bash
-# Set your credentials
-export LIVEKIT_URL="wss://your-project.livekit.cloud"
-export LIVEKIT_API_KEY="your-api-key"
-export LIVEKIT_API_SECRET="your-api-secret"
-export GOOGLE_API_KEY="your-google-key"
-
-# Run deployment script
-cd deployment
-chmod +x deploy.sh
-./deploy.sh
+# Download and run quick deploy
+wget https://raw.githubusercontent.com/elodisney/sofia-deployment/main/quick-deploy.sh
+chmod +x quick-deploy.sh
+sudo ./quick-deploy.sh
 ```
 
-### Option 2: Manual Deployment
+## 📁 Package Contents
 
-#### 1. Deploy Sofia Agent
-```bash
-cd elo-deu
-railway login
-railway init --name sofia-agent
-railway up
-railway domain
+```
+deployment/
+├── docker-compose.yml          # Main orchestration file
+├── configs/                    # Service configurations
+│   ├── nginx.conf             # Nginx main config
+│   ├── elosofia.site.conf     # Site-specific Nginx config
+│   ├── livekit.yaml           # LiveKit WebRTC config
+│   ├── turnserver.conf        # TURN server config
+│   └── monitoring-dashboard.html # Web monitoring interface
+├── scripts/                    # Deployment automation
+│   ├── deploy.sh              # Main deployment script
+│   ├── setup-firewall.sh      # Firewall configuration
+│   ├── setup-env.sh           # Environment setup helper
+│   ├── troubleshoot-webrtc.sh # WebRTC diagnostics
+│   └── monitoring-api.py      # Monitoring API service
+├── docs/                       # Documentation
+│   └── DEPLOYMENT_GUIDE.md    # Comprehensive guide
+├── quick-deploy.sh            # One-command deployment
+└── README.md                  # This file
 ```
 
-#### 2. Deploy Calendar Backend
-```bash
-cd dental-calendar
-railway init --name dental-calendar
-railway up
-railway domain
-```
+## 🔧 Manual Deployment
 
-#### 3. Deploy Token Server (Optional)
-```bash
-cd deployment
-railway init --name sofia-token-server
-railway up
-railway domain
-```
+If you prefer step-by-step control:
 
-## Configuration
-
-### Environment Variables
-
-**Sofia Agent:**
-```
-LIVEKIT_URL=wss://your-project.livekit.cloud
-LIVEKIT_API_KEY=your-key
-LIVEKIT_API_SECRET=your-secret
-GOOGLE_API_KEY=your-google-key
-CALENDAR_URL=https://your-calendar.railway.app
-```
-
-**Calendar Backend:**
-```
-PORT=3005
-NODE_ENV=production
-DATABASE_URL=file:./data/dental.db
-JWT_SECRET=your-secret
-```
-
-## Testing Your Deployment
-
-1. **Update Demo Frontend**
-   - Edit `demo-frontend.html`
-   - Update `LIVEKIT_URL` and `TOKEN_ENDPOINT`
-
-2. **Open in Browser**
-   - Open `demo-frontend.html`
-   - Click "Mit Sofia sprechen"
-   - Allow microphone access
-   - Say "Hallo" to start
-
-## Monitoring
-
-### Health Checks
-```bash
-# Check all services
-./monitor.sh
-
-# View logs
-railway logs --service sofia-agent
-railway logs --service dental-calendar
-```
-
-### Railway Dashboard
-- Real-time metrics
-- Deployment history
-- Environment variables
-- Scaling controls
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Sofia not responding**
-   - Check LiveKit credentials
-   - Verify Google API key
-   - Check logs: `railway logs`
-
-2. **Calendar errors**
-   - Ensure DATABASE_URL is set
-   - Check calendar service health
-   - Verify CORS settings
-
-3. **Connection issues**
-   - Verify all URLs are HTTPS
-   - Check network connectivity
-   - Ensure services are running
-
-### Quick Fixes
-
-```bash
-# Restart service
-railway restart --service sofia-agent
-
-# Update environment variable
-railway variables set KEY=value --service sofia-agent
-
-# Scale up
-railway scale --min=2 --max=5 --service sofia-agent
-```
-
-## Cost Breakdown
-
-### Monthly Estimates
-- **Low Usage (Demos)**: ~$15-25
-  - LiveKit: Free tier
-  - Railway: $10 + minimal usage
-
-- **Medium Usage (Pilot)**: ~$80-150
-  - LiveKit: ~$50-100
-  - Railway: ~$30-50
-
-## Production Checklist
-
-- [ ] LiveKit Cloud account created
-- [ ] Railway projects deployed
-- [ ] Environment variables configured
-- [ ] Health checks passing
-- [ ] Demo frontend working
-- [ ] Monitoring set up
-- [ ] Backup plan ready
-
-## Support
-
-For deployment issues:
-1. Check Railway logs
-2. Verify environment variables
-3. Test health endpoints
-4. Review error messages
-
-## Next Steps
-
-1. **Custom Domain**
+1. **Set environment variables**:
    ```bash
-   railway domain set sofia.yourdomain.com
+   source scripts/setup-env.sh
    ```
 
-2. **SSL Certificate**
-   - Automatically handled by Railway
-
-3. **Scaling**
+2. **Run deployment**:
    ```bash
-   railway scale --min=2 --max=10
+   sudo ./scripts/deploy.sh
    ```
 
-4. **Monitoring**
-   - Set up alerts in Railway
-   - Configure uptime monitoring
+## 🌐 System Architecture
 
-Remember: This setup is optimized for demos. For production, consider additional security, monitoring, and scaling configurations.
+- **Frontend**: GitHub Pages (elosofia.site)
+- **Backend**: Hetzner VPS (api.elosofia.site)
+- **Services**: 
+  - Dental Calendar API
+  - LiveKit WebRTC Server
+  - Sofia AI Voice Agent
+  - CRM System
+  - PostgreSQL Database
+  - Redis Cache
+  - TURN Relay Server
+
+## 🔒 Security Features
+
+- SSL/TLS encryption (Let's Encrypt)
+- Firewall rules (UFW)
+- Fail2ban intrusion prevention
+- Automated security updates
+- Docker network isolation
+- Regular automated backups
+
+## 📊 Monitoring
+
+Access the monitoring dashboard after deployment:
+- URL: `http://YOUR_VPS_IP:9090/monitor`
+- Health checks: `/usr/local/bin/sofia-health-check.sh`
+- Logs: `docker compose logs -f [service]`
+
+## 🆘 Troubleshooting
+
+For WebRTC/voice issues:
+```bash
+./scripts/troubleshoot-webrtc.sh
+```
+
+## 📝 Requirements
+
+- **VPS**: Ubuntu 22.04 LTS (2 vCPU, 4GB RAM minimum)
+- **Domain**: DNS control for elosofia.site
+- **API Keys**: OpenAI, Deepgram, LiveKit (optional)
+- **Ports**: 80, 443, 3478, 7880-7881, 50000-60000/udp
+
+## 💰 Cost
+
+- Hetzner CX21 VPS: €4.51/month
+- Domain: ~€1/month
+- **Total**: ~€5.50/month
+
+## 📚 Documentation
+
+See `DEPLOYMENT_GUIDE.md` for detailed instructions.
+
+## ⚡ Features
+
+✅ One-command deployment  
+✅ WebRTC voice calling  
+✅ Automatic SSL setup  
+✅ Built-in monitoring  
+✅ Automated backups  
+✅ Production-ready  
+
+---
+
+Built with ❤️ for the Sofia Dental Calendar System
