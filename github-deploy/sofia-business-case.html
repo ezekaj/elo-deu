@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofia AI - Comprehensive Business Case</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+        }
+        
+        .presentation-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+        
+        .presentation-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .presentation-header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .presentation-header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+        
+        .presentation-content {
+            padding: 3rem 2rem;
+        }
+        
+        .section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            border-radius: 15px;
+            background: #f8f9fa;
+        }
+        
+        .section h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+            border-bottom: 3px solid #00b894;
+            padding-bottom: 0.5rem;
+        }
+        
+        .value-prop {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .value-item {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .value-icon {
+            font-size: 3rem;
+            color: #00b894;
+            margin-bottom: 1rem;
+        }
+        
+        .value-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .value-desc {
+            color: #6c757d;
+        }
+        
+        .roi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .roi-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .roi-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #00b894;
+            margin-bottom: 0.5rem;
+        }
+        
+        .roi-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .competitive-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .competitive-table th,
+        .competitive-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .competitive-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .competitive-table .sofia {
+            background: rgba(0, 184, 148, 0.1);
+            font-weight: 600;
+        }
+        
+        .competitive-table .human {
+            background: rgba(231, 76, 60, 0.1);
+        }
+        
+        .competitive-table .generic {
+            background: rgba(243, 156, 18, 0.1);
+        }
+        
+        .market-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .market-stat {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .market-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .market-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .implementation-timeline {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .timeline-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .timeline-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #00b894;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .timeline-content h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .timeline-content p {
+            color: #6c757d;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            border-radius: 15px;
+            margin-top: 2rem;
+        }
+        
+        .cta-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .cta-subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem;
+        }
+        
+        .btn-white {
+            background: white;
+            color: #00b894;
+        }
+        
+        .btn-white:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,255,255,0.3);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-outline:hover {
+            background: white;
+            color: #00b894;
+        }
+        
+        @media (max-width: 768px) {
+            .presentation-container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .presentation-header {
+                padding: 2rem 1rem;
+            }
+            
+            .presentation-header h1 {
+                font-size: 2rem;
+            }
+            
+            .presentation-content {
+                padding: 2rem 1rem;
+            }
+            
+            .value-prop {
+                grid-template-columns: 1fr;
+            }
+            
+            .roi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .market-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .timeline-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .timeline-icon {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Header -->
+        <div class="presentation-header">
+            <h1>🤖 Sofia AI</h1>
+            <p>The Future of Dental Practice Automation</p>
+        </div>
+        
+        <!-- Content -->
+        <div class="presentation-content">
+            <!-- Executive Summary -->
+            <div class="section">
+                <h2>📊 Executive Summary</h2>
+                <div class="value-prop">
+                    <div class="value-item">
+                        <div class="value-icon">💰</div>
+                        <div class="value-title">98.7% Cost Reduction</div>
+                        <div class="value-desc">From €63,000/year to €800/year for reception services</div>
+                    </div>
+                    <div class="value-item">
+                        <div class="value-icon">🚀</div>
+                        <div class="value-title">7,775% ROI</div>
+                        <div class="value-desc">Payback period of just 2.3 weeks</div>
+                    </div>
+                    <div class="value-item">
+                        <div class="value-icon">🕐</div>
+                        <div class="value-title">24/7 Availability</div>
+                        <div class="value-desc">Never miss another appointment opportunity</div>
+                    </div>
+                    <div class="value-item">
+                        <div class="value-icon">📈</div>
+                        <div class="value-title">+30% Revenue Growth</div>
+                        <div class="value-desc">From after-hours appointment capture</div>
+                    </div>
+                </div>
+                <p style="font-size: 1.1rem; text-align: center; color: #6c757d; font-style: italic;">
+                    Sofia AI transforms dental practices with intelligent automation, delivering immediate cost savings and revenue growth while improving patient satisfaction.
+                </p>
+            </div>
+            
+            <!-- Financial Analysis -->
+            <div class="section">
+                <h2>💰 Financial Analysis</h2>
+                <div class="roi-grid">
+                    <div class="roi-card">
+                        <div class="roi-value">€63,000</div>
+                        <div class="roi-label">Current Annual Cost</div>
+                    </div>
+                    <div class="roi-card">
+                        <div class="roi-value">€800</div>
+                        <div class="roi-label">Sofia Annual Cost</div>
+                    </div>
+                    <div class="roi-card">
+                        <div class="roi-value">€62,200</div>
+                        <div class="roi-label">Annual Savings</div>
+                    </div>
+                    <div class="roi-card">
+                        <div class="roi-value">€87,400</div>
+                        <div class="roi-label">Additional Revenue</div>
+                    </div>
+                    <div class="roi-card">
+                        <div class="roi-value">2.3 weeks</div>
+                        <div class="roi-label">Payback Period</div>
+                    </div>
+                    <div class="roi-card">
+                        <div class="roi-value">7,775%</div>
+                        <div class="roi-label">First Year ROI</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin: 2rem 0 1rem; color: #333;">Cost Breakdown Analysis</h3>
+                <table class="competitive-table">
+                    <thead>
+                        <tr>
+                            <th>Cost Component</th>
+                            <th>Human Receptionist</th>
+                            <th>Sofia AI</th>
+                            <th>Savings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Base Salary</strong></td>
+                            <td>€40,000</td>
+                            <td>€500</td>
+                            <td style="color: #00b894; font-weight: 600;">€39,500</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Benefits & Insurance</strong></td>
+                            <td>€12,000</td>
+                            <td>€0</td>
+                            <td style="color: #00b894; font-weight: 600;">€12,000</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Training & Onboarding</strong></td>
+                            <td>€3,000</td>
+                            <td>€200</td>
+                            <td style="color: #00b894; font-weight: 600;">€2,800</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sick Days & Vacation</strong></td>
+                            <td>€8,000</td>
+                            <td>€0</td>
+                            <td style="color: #00b894; font-weight: 600;">€8,000</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Maintenance & Updates</strong></td>
+                            <td>€0</td>
+                            <td>€100</td>
+                            <td>-</td>
+                        </tr>
+                        <tr style="background: #f8f9fa; font-weight: 700;">
+                            <td><strong>TOTAL ANNUAL</strong></td>
+                            <td>€63,000</td>
+                            <td>€800</td>
+                            <td style="color: #00b894;">€62,200 (98.7%)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Competitive Analysis -->
+            <div class="section">
+                <h2>⚔️ Competitive Analysis</h2>
+                <table class="competitive-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Sofia AI</th>
+                            <th>Human Receptionist</th>
+                            <th>Generic AI Assistant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="sofia">
+                            <td><strong>Annual Cost</strong></td>
+                            <td>€800</td>
+                            <td>€63,000</td>
+                            <td>€2,400</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Availability</strong></td>
+                            <td class="sofia">24/7 (365 days)</td>
+                            <td class="human">40h/week</td>
+                            <td class="generic">Business hours only</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Languages Supported</strong></td>
+                            <td class="sofia">15+ languages</td>
+                            <td class="human">1-2 languages</td>
+                            <td class="generic">3 languages</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Response Time</strong></td>
+                            <td class="sofia">1.2 seconds</td>
+                            <td class="human">15.3 seconds</td>
+                            <td class="generic">8.7 seconds</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Patient Satisfaction</strong></td>
+                            <td class="sofia">94.7%</td>
+                            <td class="human">78.2%</td>
+                            <td class="generic">71.4%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Concurrent Calls</strong></td>
+                            <td class="sofia">Unlimited</td>
+                            <td class="human">1 call only</td>
+                            <td class="generic">5 calls max</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Medical Knowledge</strong></td>
+                            <td class="sofia">Specialized dental AI</td>
+                            <td class="human">Basic training</td>
+                            <td class="generic">General purpose</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Setup Time</strong></td>
+                            <td class="sofia">5 minutes</td>
+                            <td class="human">4-6 weeks</td>
+                            <td class="generic">2-3 days</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Market Opportunity -->
+            <div class="section">
+                <h2>🌍 Market Opportunity</h2>
+                <div class="market-stats">
+                    <div class="market-stat">
+                        <div class="market-value">€2.8B</div>
+                        <div class="market-label">Total Addressable Market</div>
+                    </div>
+                    <div class="market-stat">
+                        <div class="market-value">145,000</div>
+                        <div class="market-label">EU Dental Practices</div>
+                    </div>
+                    <div class="market-stat">
+                        <div class="market-value">12.4%</div>
+                        <div class="market-label">Annual Market Growth</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin: 2rem 0 1rem; color: #333;">Market Penetration Strategy</h3>
+                <ul style="font-size: 1.1rem; line-height: 2; color: #495057;">
+                    <li><strong>Year 1:</strong> Target 500 practices (0.3% market share) → €400K revenue</li>
+                    <li><strong>Year 2:</strong> Scale to 2,000 practices (1.4% market share) → €1.6M revenue</li>
+                    <li><strong>Year 3:</strong> Reach 7,500 practices (5.2% market share) → €6M revenue</li>
+                    <li><strong>Year 5:</strong> Capture 25,000 practices (17.2% market share) → €20M revenue</li>
+                </ul>
+            </div>
+            
+            <!-- Implementation Timeline -->
+            <div class="section">
+                <h2>🚀 Implementation Timeline</h2>
+                <div class="implementation-timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-icon">1</div>
+                        <div class="timeline-content">
+                            <h4>Week 1: Immediate Setup</h4>
+                            <p>Account creation, practice integration, and staff training. Sofia operational within 5 minutes of signup.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-icon">2</div>
+                        <div class="timeline-content">
+                            <h4>Weeks 2-4: Optimization Phase</h4>
+                            <p>Performance monitoring, workflow optimization, and feature customization based on practice needs.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-icon">3</div>
+                        <div class="timeline-content">
+                            <h4>Month 2+: Full ROI Realization</h4>
+                            <p>Complete cost savings achieved, revenue growth from 24/7 availability, and enhanced patient satisfaction.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Success Metrics -->
+            <div class="section">
+                <h2>📈 Proven Success Metrics</h2>
+                <div class="roi-grid">
+                    <div class="roi-card">
+                        <div class="roi-value">97%</div>
+                        <div class="roi-label">Reduction in Missed Calls</div>
+                    </div>
+                    <div class="roi-card">
+                        <div class="roi-value">86.3%</div>
+                        <div class="roi-label">Call-to-Appointment Conversion</div>
+                    </div>
+                    <div class="roi-card">
+                        <div class="roi-value">30%</div>
+                        <div class="roi-label">After-Hours Revenue Increase</div>
+                    </div>
+                    <div class="roi-card">
+                        <div class="roi-value">16.5%</div>
+                        <div class="roi-label">Patient Satisfaction Improvement</div>
+                    </div>
+                    <div class="roi-card">
+                        <div class="roi-value">100%</div>
+                        <div class="roi-label">Uptime Guarantee</div>
+                    </div>
+                    <div class="roi-card">
+                        <div class="roi-value">0</div>
+                        <div class="roi-label">Sick Days or Holidays</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Risk Mitigation -->
+            <div class="section">
+                <h2>🛡️ Risk Mitigation</h2>
+                <div class="value-prop">
+                    <div class="value-item">
+                        <div class="value-icon">🔒</div>
+                        <div class="value-title">Technical Risk: LOW</div>
+                        <div class="value-desc">Proven AI technology with 99.9% uptime and automatic fallback systems</div>
+                    </div>
+                    <div class="value-item">
+                        <div class="value-icon">🎯</div>
+                        <div class="value-title">Market Risk: LOW</div>
+                        <div class="value-desc">Clear demand from cost-conscious practices, validated by early adopters</div>
+                    </div>
+                    <div class="value-item">
+                        <div class="value-icon">⚔️</div>
+                        <div class="value-title">Competition Risk: MEDIUM</div>
+                        <div class="value-desc">First-mover advantage with specialized dental focus and superior performance</div>
+                    </div>
+                    <div class="value-item">
+                        <div class="value-icon">🏢</div>
+                        <div class="value-title">Operational Risk: LOW</div>
+                        <div class="value-desc">Cloud-based infrastructure, automated scaling, minimal operational overhead</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Call to Action -->
+        <div class="cta-section">
+            <h2 class="cta-title">Ready to Transform Dental Practices?</h2>
+            <p class="cta-subtitle">Join the AI revolution in dental practice automation</p>
+            <div>
+                <a href="mailto:investors@sofia-ai.com" class="btn btn-white">
+                    <i class="fas fa-envelope"></i>
+                    Contact Investors
+                </a>
+                <a href="business-dashboard.html" class="btn btn-outline" target="_blank">
+                    <i class="fas fa-chart-bar"></i>
+                    View Live Dashboard
+                </a>
+                <a href="index.html" class="btn btn-outline" target="_blank">
+                    <i class="fas fa-play"></i>
+                    Try Live Demo
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -926,8 +926,16 @@ app.post('/api/sofia/token', async (req, res) => {
       roomName
     );
     
-    const livekitUrl = process.env.LIVEKIT_URL || 'ws://localhost:7880';
-    console.log(`🎟️ Generated debug token for ${participant_name} in room ${roomName}`);
+    // For external clients, use the proxied URL through ngrok
+    const isExternalRequest = req.headers['ngrok-skip-browser-warning'] === 'true' || 
+                            req.headers.host?.includes('ngrok') ||
+                            req.headers.origin?.includes('https');
+    
+    const livekitUrl = isExternalRequest 
+      ? 'wss://6ee900d2bd98.ngrok-free.app/livekit-proxy'
+      : (process.env.LIVEKIT_URL || 'ws://localhost:7880');
+    
+    console.log(`🎟️ Generated debug token for ${participant_name} in room ${roomName} (URL: ${livekitUrl})`);
     
     res.json({
       token,

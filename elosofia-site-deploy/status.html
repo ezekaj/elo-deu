@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofia System Status - elosofia.site</title>
+    <script src="config.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .status-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status-card h3 {
+            margin: 0 0 15px 0;
+            color: #667eea;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .status-online {
+            background: #4CAF50;
+        }
+        .status-offline {
+            background: #f44336;
+        }
+        .status-checking {
+            background: #FFC107;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .url-display {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+            word-break: break-all;
+            margin-top: 5px;
+        }
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 0 auto;
+        }
+        .refresh-btn:hover {
+            background: #5a67d8;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Sofia System Status</h1>
+        
+        <div class="info-box">
+            <strong>Environment:</strong> <span id="environment"></span><br>
+            <strong>Last Updated:</strong> <span id="lastUpdate"></span><br>
+            <strong>Auto-refresh:</strong> Every 30 seconds
+        </div>
+        
+        <div class="status-grid">
+            <div class="status-card">
+                <h3>🦷 Dental Calendar</h3>
+                <div class="status-item">
+                    <span>
+                        <span class="status-indicator" id="calendar-status"></span>
+                        <span id="calendar-text">Checking...</span>
+                    </span>
+                </div>
+                <div class="url-display" id="calendar-url"></div>
+            </div>
+            
+            <div class="status-card">
+                <h3>🎤 LiveKit Server</h3>
+                <div class="status-item">
+                    <span>
+                        <span class="status-indicator" id="livekit-status"></span>
+                        <span id="livekit-text">Checking...</span>
+                    </span>
+                </div>
+                <div class="url-display" id="livekit-url"></div>
+            </div>
+            
+            <div class="status-card">
+                <h3>📊 CRM Dashboard</h3>
+                <div class="status-item">
+                    <span>
+                        <span class="status-indicator" id="crm-status"></span>
+                        <span id="crm-text">Checking...</span>
+                    </span>
+                </div>
+                <div class="url-display" id="crm-url"></div>
+            </div>
+            
+            <div class="status-card">
+                <h3>🤖 Sofia Agent</h3>
+                <div class="status-item">
+                    <span>
+                        <span class="status-indicator" id="sofia-status"></span>
+                        <span id="sofia-text">Checking...</span>
+                    </span>
+                </div>
+                <div class="url-display" id="sofia-url"></div>
+            </div>
+        </div>
+        
+        <button class="refresh-btn" onclick="checkAllServices()">🔄 Refresh Status</button>
+        
+        <div class="status-card" style="margin-top: 40px;">
+            <h3>📋 Service URLs</h3>
+            <div style="font-family: monospace; font-size: 14px;">
+                <p><strong>Calendar API:</strong><br><span id="api-url"></span></p>
+                <p><strong>WebSocket:</strong><br><span id="ws-url"></span></p>
+                <p><strong>LiveKit WebSocket:</strong><br><span id="livekit-ws-url"></span></p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const CONFIG = window.SOFIA_CONFIG || {};
+        
+        // Update environment info
+        document.getElementById('environment').textContent = CONFIG.ENVIRONMENT || 'Unknown';
+        document.getElementById('api-url').textContent = CONFIG.API_BASE_URL;
+        document.getElementById('ws-url').textContent = CONFIG.WS_URL;
+        document.getElementById('livekit-ws-url').textContent = CONFIG.LIVEKIT_URL;
+        
+        async function checkService(name, url, elementPrefix) {
+            const statusEl = document.getElementById(elementPrefix + '-status');
+            const textEl = document.getElementById(elementPrefix + '-text');
+            const urlEl = document.getElementById(elementPrefix + '-url');
+            
+            statusEl.className = 'status-indicator status-checking';
+            textEl.textContent = 'Checking...';
+            urlEl.textContent = url;
+            
+            try {
+                // Special handling for WebSocket URLs
+                if (url.startsWith('ws://') || url.startsWith('wss://')) {
+                    // Convert to HTTP(S) for health check
+                    const httpUrl = url.replace('ws://', 'http://').replace('wss://', 'https://');
+                    const response = await fetch(httpUrl + '/health', { 
+                        mode: 'no-cors',
+                        signal: AbortSignal.timeout(5000)
+                    }).catch(() => null);
+                    
+                    statusEl.className = 'status-indicator status-online';
+                    textEl.textContent = 'WebSocket Ready';
+                } else {
+                    const response = await fetch(url, { 
+                        mode: 'no-cors',
+                        signal: AbortSignal.timeout(5000) 
+                    });
+                    
+                    statusEl.className = 'status-indicator status-online';
+                    textEl.textContent = 'Online';
+                }
+            } catch (error) {
+                // Try alternative endpoints
+                try {
+                    const altUrl = url + (url.endsWith('/') ? '' : '/') + 'api/health';
+                    await fetch(altUrl, { mode: 'no-cors', signal: AbortSignal.timeout(3000) });
+                    statusEl.className = 'status-indicator status-online';
+                    textEl.textContent = 'Online (API)';
+                } catch {
+                    statusEl.className = 'status-indicator status-offline';
+                    textEl.textContent = 'Offline';
+                }
+            }
+        }
+        
+        async function checkAllServices() {
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleString('de-DE');
+            
+            // Check each service
+            await checkService('Calendar', CONFIG.API_BASE_URL, 'calendar');
+            await checkService('LiveKit', CONFIG.LIVEKIT_API_URL, 'livekit');
+            await checkService('CRM', CONFIG.CRM_URL, 'crm');
+            await checkService('Sofia', CONFIG.API_BASE_URL + '/api/sofia/status', 'sofia');
+            
+            // Update URLs
+            document.getElementById('calendar-url').textContent = CONFIG.API_BASE_URL;
+            document.getElementById('livekit-url').textContent = CONFIG.LIVEKIT_API_URL;
+            document.getElementById('crm-url').textContent = CONFIG.CRM_URL;
+            document.getElementById('sofia-url').textContent = CONFIG.API_BASE_URL + '/api/sofia';
+        }
+        
+        // Check on load
+        checkAllServices();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(checkAllServices, 30000);
+    </script>
+</body>
+</html>

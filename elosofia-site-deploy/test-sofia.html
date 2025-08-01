@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofia Connection Test</title>
+    <script src="config.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status {
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        pre {
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sofia Connection Test</h1>
+    
+    <div class="test-section">
+        <h2>Configuration</h2>
+        <pre id="config"></pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>Connection Tests</h2>
+        <button onclick="testAPI()">Test API</button>
+        <button onclick="testToken()">Test Token Generation</button>
+        <button onclick="testLiveKit()">Test LiveKit Connection</button>
+        <div id="results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <pre id="console" style="height: 300px; overflow-y: scroll;"></pre>
+    </div>
+    
+    <script>
+        // Display configuration
+        document.getElementById('config').textContent = JSON.stringify(window.SOFIA_CONFIG || {}, null, 2);
+        
+        // Custom console log
+        const consoleEl = document.getElementById('console');
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            consoleEl.textContent += '[LOG] ' + args.join(' ') + '\n';
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            consoleEl.textContent += '[ERROR] ' + args.join(' ') + '\n';
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        };
+        
+        const results = document.getElementById('results');
+        
+        async function testAPI() {
+            results.innerHTML = '<div class="status">Testing API connection...</div>';
+            
+            try {
+                const CONFIG = window.SOFIA_CONFIG || {};
+                const response = await fetch(CONFIG.API_BASE_URL + '/api/appointments', {
+                    headers: { 'ngrok-skip-browser-warning': 'true' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    results.innerHTML = '<div class="status success">✅ API Connection OK - ' + data.length + ' appointments found</div>';
+                } else {
+                    results.innerHTML = '<div class="status error">❌ API Connection Failed: ' + response.status + '</div>';
+                }
+            } catch (error) {
+                results.innerHTML = '<div class="status error">❌ API Connection Error: ' + error.message + '</div>';
+            }
+        }
+        
+        async function testToken() {
+            results.innerHTML = '<div class="status">Testing token generation...</div>';
+            
+            try {
+                const CONFIG = window.SOFIA_CONFIG || {};
+                const response = await fetch(CONFIG.API_BASE_URL + '/api/livekit-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({
+                        identity: 'test-user-' + Date.now(),
+                        room: 'test-room'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    results.innerHTML = '<div class="status success">✅ Token Generated Successfully</div>';
+                    results.innerHTML += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    const error = await response.text();
+                    results.innerHTML = '<div class="status error">❌ Token Generation Failed: ' + response.status + '</div>';
+                    results.innerHTML += '<pre>' + error + '</pre>';
+                }
+            } catch (error) {
+                results.innerHTML = '<div class="status error">❌ Token Generation Error: ' + error.message + '</div>';
+            }
+        }
+        
+        async function testLiveKit() {
+            results.innerHTML = '<div class="status">Testing LiveKit connection...</div>';
+            
+            try {
+                // First get a token
+                const CONFIG = window.SOFIA_CONFIG || {};
+                const tokenResponse = await fetch(CONFIG.API_BASE_URL + '/api/livekit-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({
+                        identity: 'test-user-' + Date.now(),
+                        room: 'test-room-' + Date.now()
+                    })
+                });
+                
+                if (!tokenResponse.ok) {
+                    throw new Error('Failed to get token');
+                }
+                
+                const { token, url, room: roomName } = await tokenResponse.json();
+                
+                results.innerHTML += '<div class="status">Got token, loading LiveKit SDK...</div>';
+                
+                // Load LiveKit SDK if needed
+                if (!window.LiveKitClient && !window.LiveKit) {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js';
+                    await new Promise((resolve, reject) => {
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                }
+                
+                const LK = window.LiveKitClient || window.LiveKit || window.livekit;
+                if (!LK) {
+                    throw new Error('LiveKit SDK not available');
+                }
+                
+                results.innerHTML += '<div class="status">Creating room...</div>';
+                
+                const room = new LK.Room();
+                
+                room.on(LK.RoomEvent.Connected, () => {
+                    results.innerHTML = '<div class="status success">✅ Connected to LiveKit!</div>';
+                    results.innerHTML += '<div>Room: ' + roomName + '</div>';
+                    results.innerHTML += '<div>Participant: ' + room.localParticipant.identity + '</div>';
+                    
+                    setTimeout(() => {
+                        room.disconnect();
+                        results.innerHTML += '<div class="status">Disconnected from test room</div>';
+                    }, 3000);
+                });
+                
+                room.on(LK.RoomEvent.ConnectionStateChanged, (state) => {
+                    console.log('Connection state:', state);
+                });
+                
+                const livekitUrl = CONFIG.LIVEKIT_URL || url;
+                results.innerHTML += '<div class="status">Connecting to ' + livekitUrl + '...</div>';
+                
+                await room.connect(livekitUrl, token);
+                
+            } catch (error) {
+                results.innerHTML = '<div class="status error">❌ LiveKit Connection Error: ' + error.message + '</div>';
+                console.error('LiveKit test error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -4,6 +4,8 @@ rtc:
   port_range_start: 50000
   port_range_end: 60000
   use_external_ip: true
+  stun_servers:
+    - stun.l.google.com:19302
 turn:
   enabled: true
   udp_port: 3478
@@ -20,6 +22,6 @@ webhook:
   urls:
     - "http://sofia-agent:8080/webhook"
 keys:
-  devkey: secret
+  devkey: devsecret_that_is_at_least_32_characters_long
 logging:
   level: info
