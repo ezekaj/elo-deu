@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofia Dental Calendar - Production</title>
+    
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        
+        .btn-sofia {
+            background: #1db954;
+        }
+        
+        .btn-sofia.active {
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+        
+        #calendar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        .sofia-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🦷 Sofia Dental Calendar</h1>
+        <p>Production Ready - No Localhost!</p>
+    </div>
+    
+    <div style="text-align: center; margin-bottom: 20px;">
+        <button class="btn" onclick="refreshCalendar()">🔄 Refresh</button>
+        <button class="btn btn-sofia" id="sofiaBtn" onclick="toggleSofia()">
+            🎧 Sofia Voice
+        </button>
+    </div>
+    
+    <div id="calendar"></div>
+    
+    <div class="sofia-status" id="sofiaStatus">
+        <div id="statusText">Sofia: Ready</div>
+    </div>
+
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <!-- Socket.io -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <!-- LiveKit SDK -->
+    <script src="https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.js"></script>
+    
+    <script>
+        // Production configuration - no localhost!
+        const API_BASE = window.location.origin;
+        const VPS_IP = window.location.hostname;
+        
+        let calendar;
+        let socket;
+        let room = null;
+        let audioTrack = null;
+        
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', function() {
+            initCalendar();
+            initSocket();
+        });
+        
+        function initCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'de',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: async function(info, successCallback, failureCallback) {
+                    try {
+                        const response = await fetch(`${API_BASE}/api/appointments`);
+                        const appointments = await response.json();
+                        successCallback(appointments);
+                    } catch (error) {
+                        console.error('Error loading appointments:', error);
+                        failureCallback(error);
+                    }
+                }
+            });
+            calendar.render();
+        }
+        
+        function initSocket() {
+            socket = io(API_BASE);
+            
+            socket.on('connect', () => {
+                console.log('Connected to server');
+                updateStatus('Connected to server');
+            });
+            
+            socket.on('appointmentCreated', (appointment) => {
+                calendar.addEvent(appointment);
+            });
+            
+            socket.on('appointmentUpdated', (appointment) => {
+                const event = calendar.getEventById(appointment.id);
+                if (event) {
+                    event.remove();
+                }
+                calendar.addEvent(appointment);
+            });
+        }
+        
+        async function toggleSofia() {
+            const btn = document.getElementById('sofiaBtn');
+            
+            if (room) {
+                // Stop Sofia
+                if (audioTrack) {
+                    audioTrack.stop();
+                    audioTrack = null;
+                }
+                if (room) {
+                    await room.disconnect();
+                    room = null;
+                }
+                btn.classList.remove('active');
+                updateStatus('Sofia: Stopped');
+            } else {
+                // Start Sofia
+                btn.classList.add('active');
+                updateStatus('Starting Sofia...');
+                
+                try {
+                    // Get token
+                    const response = await fetch(`${API_BASE}/api/sofia/token`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({participant_name: 'User'})
+                    });
+                    
+                    const { token, url, roomName } = await response.json();
+                    console.log('Got token for room:', roomName, 'URL:', url);
+                    updateStatus('Connecting to LiveKit...');
+                    
+                    // Create room
+                    const SDK = window.LivekitClient || window.LiveKitClient || window.livekit;
+                    room = new SDK.Room({
+                        adaptiveStream: true,
+                        dynacast: true,
+                        rtcConfig: {
+                            iceServers: [
+                                { urls: 'stun:stun.l.google.com:19302' }
+                            ]
+                        }
+                    });
+                    
+                    // Handle events
+                    room.on('connected', async () => {
+                        console.log('Connected to LiveKit!');
+                        updateStatus('Connected! Creating microphone...');
+                        
+                        try {
+                            audioTrack = await SDK.createLocalAudioTrack();
+                            await room.localParticipant.publishTrack(audioTrack);
+                            updateStatus('🎤 Sofia is listening! Speak in German.');
+                        } catch (e) {
+                            console.error('Microphone error:', e);
+                            updateStatus('Error: ' + e.message);
+                        }
+                    });
+                    
+                    room.on('participantConnected', (participant) => {
+                        console.log('Participant connected:', participant.identity);
+                        if (participant.identity.includes('agent')) {
+                            updateStatus('🤖 Sofia joined! Say "Hallo Sofia"');
+                        }
+                    });
+                    
+                    room.on('trackSubscribed', (track, publication, participant) => {
+                        if (track.kind === 'audio' && participant.identity.includes('agent')) {
+                            const audioElement = track.attach();
+                            audioElement.play();
+                            updateStatus('🔊 Sofia is speaking...');
+                        }
+                    });
+                    
+                    room.on('disconnected', () => {
+                        updateStatus('Disconnected');
+                        btn.classList.remove('active');
+                    });
+                    
+                    // Connect
+                    await room.connect(url, token);
+                    
+                } catch (error) {
+                    console.error('Sofia error:', error);
+                    updateStatus('Error: ' + error.message);
+                    btn.classList.remove('active');
+                }
+            }
+        }
+        
+        function refreshCalendar() {
+            calendar.refetchEvents();
+        }
+        
+        function updateStatus(text) {
+            document.getElementById('statusText').textContent = text;
+            console.log('Status:', text);
+        }
+    </script>
+</body>
+</html>

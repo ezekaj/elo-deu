@@ -668,8 +668,14 @@ app.post('/api/sofia/connect', async (req, res) => {
       await triggerSofiaManually(roomName);
     }, 5000);
     
-    // VPS deployment - always use direct LiveKit connection
-    const livekitUrl = process.env.LIVEKIT_URL || 'ws://localhost:7880';
+    // VPS deployment - use public IP for external clients
+    const isInternalRequest = req.headers.host === 'dental-calendar:3005' || 
+                             req.headers.host === 'localhost:3005';
+    
+    const livekitUrl = isInternalRequest 
+      ? (process.env.LIVEKIT_URL || 'ws://localhost:7880')
+      : `ws://${process.env.VPS_IP || req.headers.host.split(':')[0]}:7880`;
+      
     console.log(`📡 Sofia connect - Using LiveKit URL: ${livekitUrl}`);
     
     res.json({
@@ -839,8 +845,8 @@ app.post('/api/sofia/token', async (req, res) => {
       roomName
     );
     
-    // VPS deployment - direct connection
-    const livekitUrl = process.env.LIVEKIT_URL || 'ws://localhost:7880';
+    // VPS deployment - use public IP for external clients
+    const livekitUrl = `ws://${process.env.VPS_IP || req.headers.host.split(':')[0]}:7880`;
     
     console.log(`🎟️ Generated debug token for ${participant_name} in room ${roomName} (URL: ${livekitUrl})`);
     
