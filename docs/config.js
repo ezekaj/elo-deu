@@ -7,24 +7,24 @@ window.SOFIA_CONFIG = {
     // API Endpoints - using Cloudflare tunnels
     API_BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3005' 
-        : 'https://impacts-approximate-florist-cartridges.trycloudflare.com',
+        : 'https://substantially-attempted-thai-pn.trycloudflare.com',
     
     CRM_URL: window.location.hostname === 'localhost'
         ? 'http://localhost:5000'
-        : 'https://impacts-approximate-florist-cartridges.trycloudflare.com',
+        : 'https://substantially-attempted-thai-pn.trycloudflare.com',
     
     LIVEKIT_URL: window.location.hostname === 'localhost'
         ? 'ws://localhost:7880'
-        : 'wss://maximum-topic-malawi-ltd.trycloudflare.com',  // Direct LiveKit tunnel
+        : 'wss://vt-frog-dem-limitations.trycloudflare.com',  // Direct LiveKit tunnel
     
     LIVEKIT_API_URL: window.location.hostname === 'localhost'
         ? 'http://localhost:7880'
-        : 'https://maximum-topic-malawi-ltd.trycloudflare.com',
+        : 'https://vt-frog-dem-limitations.trycloudflare.com',
     
     // WebSocket for real-time updates
     WS_URL: window.location.hostname === 'localhost'
         ? 'ws://localhost:3005'
-        : 'wss://impacts-approximate-florist-cartridges.trycloudflare.com',
+        : 'wss://substantially-attempted-thai-pn.trycloudflare.com',
     
     // Environment
     ENVIRONMENT: window.location.hostname === 'localhost' ? 'development' : 'production',
