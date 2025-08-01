@@ -482,7 +482,168 @@
     <script src="https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.js"></script>
     
     <script src="calendar.js"></script>
-    <!-- Sofia Loader - Forces fresh debug version -->
-    <script src="sofia-loader.js?v=1"></script>
+    <!-- Sofia Inline Debug Fix -->
+    <script>
+        // Remove any cached Sofia scripts
+        document.querySelectorAll('script[src*="sofia"]').forEach(s => s.remove());
+        
+        // Sofia Debug Inline
+        console.log('[Sofia Inline] Starting...');
+        
+        let room = null;
+        let isConnecting = false;
+        let audioTrack = null;
+        
+        function debugLog(msg, isError = false) {
+            console.log(`[Sofia Debug] ${msg}`);
+            const statusEl = document.getElementById('sofiaStatusText');
+            if (statusEl) statusEl.textContent = msg;
+            
+            const chatEl = document.getElementById('sofiaChat');
+            if (chatEl) {
+                const div = document.createElement('div');
+                div.className = 'sofia-message system';
+                div.style.fontSize = '12px';
+                div.style.color = isError ? '#c00' : '#666';
+                div.textContent = `[Debug] ${msg}`;
+                chatEl.appendChild(div);
+            }
+        }
+        
+        async function startVoiceAssistant() {
+            debugLog('Starting voice assistant...');
+            
+            if (isConnecting || room) {
+                debugLog('Already connecting or connected');
+                return;
+            }
+            
+            isConnecting = true;
+            
+            try {
+                // Check for LiveKit SDK
+                debugLog('Checking for LiveKit SDK...');
+                let SDK = window.LivekitClient || window.LiveKitClient || window.livekit;
+                
+                if (!SDK) {
+                    debugLog('SDK not found, waiting for load...');
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    SDK = window.LivekitClient || window.LiveKitClient || window.livekit;
+                }
+                
+                if (!SDK) {
+                    throw new Error('LiveKit SDK not available after wait');
+                }
+                
+                debugLog('SDK found!');
+                
+                // Check microphone
+                debugLog('Checking microphone...');
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(t => t.stop());
+                debugLog('Microphone OK');
+                
+                // Get token
+                debugLog('Getting token...');
+                const tokenResp = await fetch(`${window.CONFIG.API_BASE_URL}/api/sofia/token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({ participant_name: 'User ' + Date.now() })
+                });
+                
+                if (!tokenResp.ok) {
+                    throw new Error(`Token error: ${tokenResp.status}`);
+                }
+                
+                const { token, url, roomName } = await tokenResp.json();
+                debugLog(`Token received for room: ${roomName}`);
+                
+                // Create room
+                debugLog('Creating room...');
+                room = new SDK.Room();
+                
+                room.on('connected', async () => {
+                    debugLog('Connected to LiveKit!');
+                    document.getElementById('voiceIndicator').classList.remove('inactive');
+                    
+                    try {
+                        debugLog('Creating audio track...');
+                        audioTrack = await SDK.createLocalAudioTrack();
+                        await room.localParticipant.publishTrack(audioTrack);
+                        debugLog('🎤 Microphone active!');
+                    } catch (e) {
+                        debugLog(`Mic error: ${e.message}`, true);
+                    }
+                });
+                
+                room.on('disconnected', () => {
+                    debugLog('Disconnected');
+                    if (audioTrack) {
+                        audioTrack.stop();
+                        audioTrack = null;
+                    }
+                    room = null;
+                    isConnecting = false;
+                });
+                
+                // Connect
+                debugLog('Connecting to LiveKit...');
+                await room.connect(url, token);
+                
+            } catch (error) {
+                debugLog(`Error: ${error.message}`, true);
+                console.error('Full error:', error);
+                isConnecting = false;
+                if (room) {
+                    room.disconnect();
+                    room = null;
+                }
+            }
+        }
+        
+        function stopVoiceAssistant() {
+            debugLog('Stopping...');
+            if (room) {
+                room.disconnect();
+                room = null;
+            }
+            if (audioTrack) {
+                audioTrack.stop();
+                audioTrack = null;
+            }
+            isConnecting = false;
+            document.getElementById('voiceIndicator').classList.add('inactive');
+        }
+        
+        // Override functions
+        window.startVoiceAssistant = startVoiceAssistant;
+        window.stopVoiceAssistant = stopVoiceAssistant;
+        
+        // Fix button handler
+        setTimeout(() => {
+            const btn = document.getElementById('sofiaAgentBtn');
+            if (btn) {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const iface = document.getElementById('sofiaInterface');
+                    if (this.classList.contains('active')) {
+                        iface.classList.add('visible');
+                        document.getElementById('sofiaChat').innerHTML = '';
+                        setTimeout(startVoiceAssistant, 100);
+                    } else {
+                        iface.classList.remove('visible');
+                        stopVoiceAssistant();
+                    }
+                });
+            }
+        }, 1000);
+        
+        console.log('[Sofia Inline] Ready!');
+    </script>
 </body>
 </html>
