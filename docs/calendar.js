@@ -22,12 +22,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function initializeSocket() {
     // Use configured WebSocket URL
-    const wsUrl = CONFIG.WS_URL || CONFIG.API_BASE_URL;
+    const wsUrl = CONFIG.API_BASE_URL || CONFIG.WS_URL;
     socket = io(wsUrl, {
-        transports: ['websocket', 'polling'],
+        transports: ['polling', 'websocket'],
         reconnection: true,
         reconnectionAttempts: 5,
-        reconnectionDelay: 1000
+        reconnectionDelay: 1000,
+        extraHeaders: {
+            'ngrok-skip-browser-warning': 'true'
+        }
     });
     
     socket.on('connect', function() {
@@ -226,7 +229,8 @@ function createAppointment() {
     fetch(CONFIG.API_BASE_URL + '/api/appointments', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
         },
         body: JSON.stringify(formData)
     })
