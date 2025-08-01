@@ -15,9 +15,29 @@ console.log('Calendar.js - API_BASE_URL:', CONFIG.API_BASE_URL);
 
 // Initialize everything when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize immediately and check connection
+    console.log('DOM loaded, initializing...');
+    updateConnectionStatus(false); // Start with disconnected
+    
     initializeSocket();
     initializeCalendar();
     setupEventListeners();
+    
+    // Also try API connection as fallback
+    setTimeout(() => {
+        const statusEl = document.getElementById('connectionStatus');
+        if (statusEl && statusEl.textContent.includes('getrennt')) {
+            // If still disconnected after 2 seconds, test API directly
+            fetch(CONFIG.API_BASE_URL + '/api/appointments', {
+                headers: { 'ngrok-skip-browser-warning': 'true' }
+            }).then(response => {
+                if (response.ok) {
+                    statusEl.textContent = '🟢 Verbunden (API)';
+                    statusEl.className = 'connection-status connected';
+                }
+            }).catch(() => {});
+        }
+    }, 2000);
 });
 
 function initializeSocket() {
