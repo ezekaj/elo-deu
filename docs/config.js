@@ -4,27 +4,27 @@
  */
 
 window.SOFIA_CONFIG = {
-    // API Endpoints - using ngrok tunnels for demo
+    // API Endpoints - using Cloudflare tunnels
     API_BASE_URL: window.location.hostname === 'localhost' 
         ? 'http://localhost:3005' 
-        : 'https://ecd85b3c3637.ngrok-free.app',
+        : 'https://impacts-approximate-florist-cartridges.trycloudflare.com',
     
     CRM_URL: window.location.hostname === 'localhost'
         ? 'http://localhost:5000'
-        : 'https://ecd85b3c3637.ngrok-free.app',
+        : 'https://impacts-approximate-florist-cartridges.trycloudflare.com',
     
     LIVEKIT_URL: window.location.hostname === 'localhost'
         ? 'ws://localhost:7880'
-        : 'ws://localhost:7880',  // Using localhost for now since ngrok limited
+        : 'wss://maximum-topic-malawi-ltd.trycloudflare.com',  // Direct LiveKit tunnel
     
     LIVEKIT_API_URL: window.location.hostname === 'localhost'
         ? 'http://localhost:7880'
-        : 'https://ecd85b3c3637.ngrok-free.app',
+        : 'https://maximum-topic-malawi-ltd.trycloudflare.com',
     
     // WebSocket for real-time updates
     WS_URL: window.location.hostname === 'localhost'
         ? 'ws://localhost:3005'
-        : 'wss://ecd85b3c3637.ngrok-free.app',
+        : 'wss://impacts-approximate-florist-cartridges.trycloudflare.com',
     
     // Environment
     ENVIRONMENT: window.location.hostname === 'localhost' ? 'development' : 'production',
