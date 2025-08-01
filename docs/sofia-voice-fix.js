@@ -18,8 +18,16 @@ let audioTrack = null;
 
 // Ensure LiveKit is loaded
 async function ensureLiveKitLoaded() {
+    // Check multiple possible global names
     if (typeof window.LiveKitClient !== 'undefined') {
-        console.log('LiveKit already loaded');
+        console.log('LiveKit already loaded as LiveKitClient');
+        return true;
+    }
+    
+    if (typeof window.livekit !== 'undefined') {
+        console.log('LiveKit already loaded as livekit');
+        // Map to expected name
+        window.LiveKitClient = window.livekit;
         return true;
     }
     
@@ -29,12 +37,27 @@ async function ensureLiveKitLoaded() {
         const existingScript = document.querySelector('script[src*="livekit-client"]');
         if (existingScript) {
             // Wait for it to load
-            if (window.LiveKitClient) {
-                resolve(true);
-            } else {
-                existingScript.addEventListener('load', () => resolve(true));
-                existingScript.addEventListener('error', () => reject(new Error('LiveKit load failed')));
-            }
+            const checkLoaded = () => {
+                if (window.LiveKitClient || window.livekit) {
+                    if (window.livekit && !window.LiveKitClient) {
+                        window.LiveKitClient = window.livekit;
+                    }
+                    resolve(true);
+                    return true;
+                }
+                return false;
+            };
+            
+            if (checkLoaded()) return;
+            
+            existingScript.addEventListener('load', () => {
+                setTimeout(() => {
+                    if (!checkLoaded()) {
+                        reject(new Error('LiveKit loaded but not available'));
+                    }
+                }, 100);
+            });
+            existingScript.addEventListener('error', () => reject(new Error('LiveKit load failed')));
             return;
         }
         
@@ -42,8 +65,19 @@ async function ensureLiveKitLoaded() {
         const script = document.createElement('script');
         script.src = 'https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.js';
         script.onload = () => {
-            console.log('LiveKit SDK loaded successfully');
-            resolve(true);
+            console.log('LiveKit SDK script loaded');
+            setTimeout(() => {
+                if (window.LiveKitClient || window.livekit) {
+                    if (window.livekit && !window.LiveKitClient) {
+                        window.LiveKitClient = window.livekit;
+                    }
+                    console.log('LiveKit SDK available');
+                    resolve(true);
+                } else {
+                    console.error('LiveKit SDK not found after load');
+                    reject(new Error('LiveKit SDK nicht verfügbar'));
+                }
+            }, 100);
         };
         script.onerror = () => {
             console.error('Failed to load LiveKit SDK');

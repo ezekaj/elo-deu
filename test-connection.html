@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Connection Test</title>
+</head>
+<body>
+    <h1>Testing Sofia Dental Connection</h1>
+    <div id="status"></div>
+    <pre id="results"></pre>
+
+    <script>
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+        
+        async function testConnection() {
+            // Test 1: Config loaded
+            if (window.SOFIA_CONFIG) {
+                results.innerHTML += '✅ Config loaded\n';
+                results.innerHTML += 'API URL: ' + window.SOFIA_CONFIG.API_BASE_URL + '\n';
+            } else {
+                results.innerHTML += '❌ Config NOT loaded\n';
+                return;
+            }
+            
+            // Test 2: API connection
+            try {
+                status.innerHTML = 'Testing API...';
+                const response = await fetch(window.SOFIA_CONFIG.API_BASE_URL + '/api/appointments');
+                if (response.ok) {
+                    results.innerHTML += '✅ API connection successful\n';
+                    const data = await response.json();
+                    results.innerHTML += 'Appointments count: ' + data.length + '\n';
+                } else {
+                    results.innerHTML += '❌ API connection failed: ' + response.status + '\n';
+                }
+            } catch (error) {
+                results.innerHTML += '❌ API error: ' + error.message + '\n';
+            }
+            
+            // Test 3: WebSocket
+            try {
+                status.innerHTML = 'Testing WebSocket...';
+                const ws = new WebSocket(window.SOFIA_CONFIG.WS_URL);
+                ws.onopen = () => {
+                    results.innerHTML += '✅ WebSocket connected\n';
+                    ws.close();
+                };
+                ws.onerror = (error) => {
+                    results.innerHTML += '❌ WebSocket error\n';
+                };
+            } catch (error) {
+                results.innerHTML += '❌ WebSocket error: ' + error.message + '\n';
+            }
+            
+            status.innerHTML = 'Tests complete';
+        }
+        
+        // Load config first
+        const script = document.createElement('script');
+        script.src = '/config.js';
+        script.onload = testConnection;
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

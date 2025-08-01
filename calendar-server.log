@@ -1,0 +1,67 @@
+
+> dental-calendar@1.0.0 start
+> node server.js
+
+[dotenv@17.2.1] injecting env (9) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+Datenbank bereit - Kalender startet mit leerer Termindatenbank
+Dental Calendar Server running on http://localhost:3005
+Sofia Webhook: POST /api/sofia/appointment
+LiveKit WebSocket Proxy: ws://localhost:3005/livekit-proxy
+🎟️ Generating LiveKit token for Calendar User 1754049546753 in room sofia-dental-1754049546753
+📡 Using LiveKit URL: ws://localhost:7880
+🔄 New WebSocket proxy connection to LiveKit
+Request URL: /livekit-proxy/rtc?access_token=eyJhbGciOiJIUzI1NiJ9.eyJ2aWRlbyI6eyJyb29tSm9pbiI6dHJ1ZSwicm9vbSI6InNvZmlhLWRlbnRhbC0xNzU0MDQ5NTQ2NzUzIiwiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuU3Vic2NyaWJlIjp0cnVlLCJjYW5QdWJsaXNoRGF0YSI6dHJ1ZX0sIm1ldGFkYXRhIjoie1wicmVxdWVzdF9hZ2VudFwiOnRydWUsXCJhZ2VudF90eXBlXCI6XCJkZW50YWwtYXNzaXN0YW50XCJ9IiwiaXNzIjoiZGV2a2V5IiwiZXhwIjoxNzU0MDg1NTQ3LCJuYmYiOjAsInN1YiI6IkNhbGVuZGFyIFVzZXIgMTc1NDA0OTU0Njc1MyJ9.RInzYxdkd4vIQCfdiprY3dy0TTlZB6iSIKOjASDHl-M&auto_subscribe=1&sdk=js&version=1.15.4&protocol=11&adaptive_stream=1
+Request headers: {
+  host: 'e13f48333e1e.ngrok-free.app',
+  'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1',
+  accept: '*/*',
+  'accept-encoding': 'gzip, deflate, br',
+  'accept-language': 'en-US,en;q=0.9',
+  'cache-control': 'no-cache',
+  connection: 'Upgrade',
+  origin: 'https://elosofia.site',
+  pragma: 'no-cache',
+  priority: 'u=3, i',
+  'sec-fetch-dest': 'websocket',
+  'sec-fetch-mode': 'websocket',
+  'sec-fetch-site': 'cross-site',
+  'sec-websocket-extensions': 'permessage-deflate',
+  'sec-websocket-key': '5hNcERRXeMxsQy2AF2PUTw==',
+  'sec-websocket-version': '13',
+  upgrade: 'websocket',
+  'x-forwarded-for': '153.92.90.3',
+  'x-forwarded-host': 'e13f48333e1e.ngrok-free.app',
+  'x-forwarded-proto': 'https'
+}
+Target URL: ws://livekit:7880/rtc?access_token=eyJhbGciOiJIUzI1NiJ9.eyJ2aWRlbyI6eyJyb29tSm9pbiI6dHJ1ZSwicm9vbSI6InNvZmlhLWRlbnRhbC0xNzU0MDQ5NTQ2NzUzIiwiY2FuUHVibGlzaCI6dHJ1ZSwiY2FuU3Vic2NyaWJlIjp0cnVlLCJjYW5QdWJsaXNoRGF0YSI6dHJ1ZX0sIm1ldGFkYXRhIjoie1wicmVxdWVzdF9hZ2VudFwiOnRydWUsXCJhZ2VudF90eXBlXCI6XCJkZW50YWwtYXNzaXN0YW50XCJ9IiwiaXNzIjoiZGV2a2V5IiwiZXhwIjoxNzU0MDg1NTQ3LCJuYmYiOjAsInN1YiI6IkNhbGVuZGFyIFVzZXIgMTc1NDA0OTU0Njc1MyJ9.RInzYxdkd4vIQCfdiprY3dy0TTlZB6iSIKOjASDHl-M&auto_subscribe=1&sdk=js&version=1.15.4&protocol=11&adaptive_stream=1
+Headers: {
+  "host": "e13f48333e1e.ngrok-free.app",
+  "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1",
+  "accept": "*/*",
+  "accept-encoding": "gzip, deflate, br",
+  "accept-language": "en-US,en;q=0.9",
+  "cache-control": "no-cache",
+  "connection": "Upgrade",
+  "origin": "https://elosofia.site",
+  "pragma": "no-cache",
+  "priority": "u=3, i",
+  "sec-fetch-dest": "websocket",
+  "sec-fetch-mode": "websocket",
+  "sec-fetch-site": "cross-site",
+  "sec-websocket-extensions": "permessage-deflate",
+  "sec-websocket-key": "5hNcERRXeMxsQy2AF2PUTw==",
+  "sec-websocket-version": "13",
+  "upgrade": "websocket",
+  "x-forwarded-for": "153.92.90.3",
+  "x-forwarded-host": "e13f48333e1e.ngrok-free.app",
+  "x-forwarded-proto": "https"
+}
+LiveKit WS error: Error: getaddrinfo EAI_AGAIN livekit
+    at GetAddrInfoReqWrap.onlookup [as oncomplete] (node:dns:107:26) {
+  errno: -3001,
+  code: 'EAI_AGAIN',
+  syscall: 'getaddrinfo',
+  hostname: 'livekit'
+}
+LiveKit disconnected: 1006 <Buffer >
+Client disconnected: 1001 <Buffer 4c 69 76 65 4b 69 74 20 63 6f 6e 6e 65 63 74 69 6f 6e 20 66 61 69 6c 65 64>

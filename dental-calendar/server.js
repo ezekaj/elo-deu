@@ -6,6 +6,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const { AccessToken } = require('livekit-server-sdk');
+const WebSocket = require('ws');
+const url = require('url');
 require('dotenv').config();
 
 const app = express();
@@ -13,14 +15,110 @@ const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
-  }
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  allowEIO3: true,
+  transports: ['polling', 'websocket']
 });
+
+console.log('Socket.IO server initialized');
 
 // Middleware
 app.use(cors());
+
+// Skip ngrok browser warning
+app.use((req, res, next) => {
+  res.setHeader('ngrok-skip-browser-warning', 'true');
+  next();
+});
+
 app.use(bodyParser.json());
 app.use(express.static('public'));
+
+// Simple WebSocket proxy for LiveKit
+const livekitTarget = process.env.LIVEKIT_URL || 'ws://localhost:7880';
+
+// Create a WebSocket server for proxying
+const wss = new WebSocket.Server({ noServer: true });
+
+wss.on('connection', (clientWs, request) => {
+  console.log('🔄 New WebSocket proxy connection to LiveKit');
+  console.log('Request URL:', request.url);
+  console.log('Request headers:', request.headers);
+  
+  // Create connection to LiveKit
+  // Extract the actual path after /livekit-proxy
+  const targetPath = request.url.replace('/livekit-proxy', '') || '';
+  // LiveKit expects /rtc for WebSocket connections
+  const targetUrl = livekitTarget + (targetPath || '/rtc');
+  console.log('Target URL:', targetUrl);
+  console.log('Headers:', JSON.stringify(request.headers, null, 2));
+  
+  // Forward important headers
+  const headers = {
+    'User-Agent': request.headers['user-agent'] || 'LiveKit-Proxy/1.0',
+  };
+  
+  // Forward WebSocket protocol if present
+  if (request.headers['sec-websocket-protocol']) {
+    headers['Sec-WebSocket-Protocol'] = request.headers['sec-websocket-protocol'];
+  }
+  
+  // Forward authorization if present
+  if (request.headers['authorization']) {
+    headers['Authorization'] = request.headers['authorization'];
+  }
+  
+  // Create WebSocket with options
+  const wsOptions = {
+    headers: headers,
+    perMessageDeflate: false,
+    followRedirects: true
+  };
+  
+  const livekitWs = new WebSocket(targetUrl, wsOptions);
+  
+  // Handle LiveKit connection open
+  livekitWs.on('open', () => {
+    console.log('✅ Connected to LiveKit server');
+    // If LiveKit accepted a subprotocol, relay it back to client
+    if (livekitWs.protocol) {
+      clientWs.protocol = livekitWs.protocol;
+    }
+  });
+  
+  // Proxy messages from client to LiveKit
+  clientWs.on('message', (data) => {
+    if (livekitWs.readyState === WebSocket.OPEN) {
+      livekitWs.send(data);
+    }
+  });
+  
+  // Proxy messages from LiveKit to client
+  livekitWs.on('message', (data) => {
+    if (clientWs.readyState === WebSocket.OPEN) {
+      clientWs.send(data);
+    }
+  });
+  
+  // Handle errors
+  clientWs.on('error', (err) => console.error('Client WS error:', err));
+  livekitWs.on('error', (err) => {
+    console.error('LiveKit WS error:', err);
+    clientWs.close(1001, 'LiveKit connection failed');
+  });
+  
+  // Handle close
+  clientWs.on('close', (code, reason) => {
+    console.log('Client disconnected:', code, reason);
+    livekitWs.close();
+  });
+  livekitWs.on('close', (code, reason) => {
+    console.log('LiveKit disconnected:', code, reason);
+    clientWs.close();
+  });
+});
 
 // Database setup
 const db = new sqlite3.Database('./dental_calendar.db');
@@ -622,7 +720,10 @@ app.post('/api/livekit-token', async (req, res) => {
     console.log(`🎟️ Generating LiveKit token for ${participantName} in room ${roomName}`);
     
     const token = await generateLiveKitToken(participantName, roomName);
+    
+    // Always use direct LiveKit connection now that we have separate tunnels
     const livekitUrl = process.env.LIVEKIT_URL || 'ws://localhost:7880';
+    console.log(`📡 Using LiveKit URL: ${livekitUrl}`);
     
     res.json({
       token: token,
@@ -654,9 +755,13 @@ app.post('/api/sofia/connect', async (req, res) => {
       await triggerSofiaManually(roomName);
     }, 5000);
     
+    // Always use direct LiveKit connection now that we have separate tunnels
+    const livekitUrl = process.env.LIVEKIT_URL || 'ws://localhost:7880';
+    console.log(`📡 Sofia connect - Using LiveKit URL: ${livekitUrl}`);
+    
     res.json({
       token: token,
-      url: process.env.LIVEKIT_URL || 'ws://localhost:7880',
+      url: livekitUrl,
       roomName: roomName
     });
   } catch (error) {
@@ -810,8 +915,47 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Sofia token endpoint for debugging
+app.post('/api/sofia/token', async (req, res) => {
+  const { participant_name } = req.body;
+  const roomName = 'sofia-dental-' + Date.now();
+  
+  try {
+    const token = await generateLiveKitToken(
+      participant_name || 'Debug User ' + Date.now(),
+      roomName
+    );
+    
+    const livekitUrl = process.env.LIVEKIT_URL || 'ws://localhost:7880';
+    console.log(`🎟️ Generated debug token for ${participant_name} in room ${roomName}`);
+    
+    res.json({
+      token,
+      url: livekitUrl,
+      roomName
+    });
+  } catch (error) {
+    console.error('Error generating token:', error);
+    res.status(500).json({ error: 'Failed to generate token: ' + error.message });
+  }
+});
+
 const PORT = process.env.PORT || 3005;
 server.listen(PORT, () => {
   console.log(`Dental Calendar Server running on http://localhost:${PORT}`);
   console.log('Sofia Webhook: POST /api/sofia/appointment');
+  console.log(`LiveKit WebSocket Proxy: ws://localhost:${PORT}/livekit-proxy`);
+});
+
+// Handle WebSocket upgrade for LiveKit proxy
+server.on('upgrade', (request, socket, head) => {
+  const pathname = url.parse(request.url).pathname;
+  
+  if (pathname.startsWith('/livekit-proxy')) {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  } else {
+    socket.destroy();
+  }
 });

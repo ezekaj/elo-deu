@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>LiveKit Authentication Test</title>
+    <script src="config.js"></script>
+    <script src="https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        #log {
+            background: #f5f5f5;
+            padding: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>LiveKit Authentication Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Token Generation Test</h2>
+        <button onclick="testTokenGeneration()">Generate Token</button>
+        <div id="token-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. LiveKit Connection Test</h2>
+        <button onclick="testLiveKitConnection()">Test Connection</button>
+        <div id="connection-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Full Sofia Flow Test</h2>
+        <button onclick="testFullSofiaFlow()">Test Full Flow</button>
+        <div id="flow-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Debug Log</h2>
+        <div id="log"></div>
+    </div>
+    
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue';
+            logDiv.innerHTML += `<div style="color: ${color}">[${time}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        async function testTokenGeneration() {
+            const resultDiv = document.getElementById('token-result');
+            resultDiv.innerHTML = '<div class="status info">Testing token generation...</div>';
+            
+            try {
+                const apiBase = CONFIG.API_BASE_URL || 'http://localhost:3005';
+                log(`Requesting token from: ${apiBase}/api/sofia/token`);
+                
+                const response = await fetch(`${apiBase}/api/sofia/token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({
+                        participant_name: 'Auth Test User ' + Date.now()
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                log(`Token generated successfully!`, 'success');
+                log(`Room: ${data.roomName}`);
+                log(`URL: ${data.url}`);
+                log(`Token (first 50 chars): ${data.token.substring(0, 50)}...`);
+                
+                resultDiv.innerHTML = `
+                    <div class="status success">✅ Token generated successfully!</div>
+                    <div>Room: ${data.roomName}</div>
+                    <div>URL: ${data.url}</div>
+                `;
+                
+                // Store for next test
+                window.testToken = data.token;
+                window.testUrl = data.url;
+                window.testRoom = data.roomName;
+                
+                return data;
+            } catch (error) {
+                log(`Token generation failed: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="status error">❌ Token generation failed: ${error.message}</div>`;
+                throw error;
+            }
+        }
+        
+        async function testLiveKitConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.innerHTML = '<div class="status info">Testing LiveKit connection...</div>';
+            
+            try {
+                // Generate token first if not available
+                if (!window.testToken) {
+                    log('No token available, generating one first...');
+                    await testTokenGeneration();
+                }
+                
+                log(`Connecting to LiveKit at: ${window.testUrl}`);
+                log(`Using room: ${window.testRoom}`);
+                
+                const room = new LiveKitClient.Room();
+                
+                // Add event listeners
+                room.on('connected', () => {
+                    log('Connected to LiveKit!', 'success');
+                    resultDiv.innerHTML = '<div class="status success">✅ Successfully connected to LiveKit!</div>';
+                });
+                
+                room.on('disconnected', (reason) => {
+                    log(`Disconnected: ${reason}`, 'error');
+                });
+                
+                room.on('connectionStateChanged', (state) => {
+                    log(`Connection state: ${state}`);
+                });
+                
+                room.on('participantConnected', (participant) => {
+                    log(`Participant connected: ${participant.identity}`, 'success');
+                });
+                
+                // Connect with timeout
+                const connectPromise = room.connect(window.testUrl, window.testToken);
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Connection timeout')), 10000)
+                );
+                
+                await Promise.race([connectPromise, timeoutPromise]);
+                
+                log('Connection successful!', 'success');
+                
+                // Wait a bit then disconnect
+                setTimeout(() => {
+                    log('Disconnecting from test room...');
+                    room.disconnect();
+                }, 3000);
+                
+                return true;
+            } catch (error) {
+                log(`LiveKit connection failed: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="status error">❌ LiveKit connection failed: ${error.message}</div>`;
+                throw error;
+            }
+        }
+        
+        async function testFullSofiaFlow() {
+            const resultDiv = document.getElementById('flow-result');
+            resultDiv.innerHTML = '<div class="status info">Testing full Sofia flow...</div>';
+            
+            try {
+                // Step 1: Generate token
+                log('Step 1: Generating token...');
+                const tokenData = await testTokenGeneration();
+                
+                // Step 2: Test LiveKit connection
+                log('Step 2: Testing LiveKit connection...');
+                await testLiveKitConnection();
+                
+                // Step 3: Test Sofia agent dispatch
+                log('Step 3: Would dispatch Sofia agent here...');
+                // In real implementation, this would trigger Sofia to join the room
+                
+                resultDiv.innerHTML = '<div class="status success">✅ Full flow test completed successfully!</div>';
+                log('Full flow test completed!', 'success');
+                
+            } catch (error) {
+                log(`Full flow test failed: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="status error">❌ Full flow test failed: ${error.message}</div>`;
+            }
+        }
+        
+        // Initial log
+        log('LiveKit Authentication Test Page Loaded');
+        log(`API Base URL: ${CONFIG.API_BASE_URL || 'http://localhost:3005'}`);
+    </script>
+</body>
+</html>
