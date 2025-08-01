@@ -6,8 +6,8 @@
 // VPS Configuration - Update these when you have your VPS
 const VPS_CONFIG = {
     // Replace with your VPS IP or domain
-    VPS_IP: 'YOUR_VPS_IP',  // e.g., '123.456.789.0' or 'api.elosofia.site'
-    USE_HTTPS: false        // Set to true after SSL setup
+    VPS_IP: '167.235.67.1',  // Your Hetzner VPS
+    USE_HTTPS: false         // Set to true after SSL setup
 };
 
 // Determine environment
