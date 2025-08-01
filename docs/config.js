@@ -7,11 +7,12 @@
 const VPS_CONFIG = {
     // Replace with your VPS IP or domain
     VPS_IP: '167.235.67.1',  // Your Hetzner VPS
-    USE_HTTPS: true          // SSL is now enabled
+    USE_HTTPS: false         // Set to true after SSL setup
 };
 
 // Determine environment
 const isLocalhost = window.location.hostname === 'localhost';
+const isVPSIP = window.location.hostname === VPS_CONFIG.VPS_IP;
 const protocol = VPS_CONFIG.USE_HTTPS ? 'https' : 'http';
 const wsProtocol = VPS_CONFIG.USE_HTTPS ? 'wss' : 'ws';
 
@@ -30,7 +31,7 @@ window.CONFIG = {
     // LiveKit configuration - Direct connection, no proxy needed!
     LIVEKIT_URL: isLocalhost
         ? 'ws://localhost:7880'
-        : `${wsProtocol}://${VPS_CONFIG.VPS_IP}:7880`,
+        : (isVPSIP ? `ws://${VPS_CONFIG.VPS_IP}:7880` : `${wsProtocol}://${VPS_CONFIG.VPS_IP}:7880`),
     
     // Features
     DEMO_MODE: false,
