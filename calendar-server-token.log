@@ -1,0 +1,11 @@
+
+> dental-calendar@1.0.0 start
+> node server.js
+
+[dotenv@17.2.1] injecting env (9) from .env -- tip: 📡 observe env with Radar: https://dotenvx.com/radar
+Socket.IO server initialized
+Datenbank bereit - Kalender startet mit leerer Termindatenbank
+Dental Calendar Server running on http://localhost:3005
+Sofia Webhook: POST /api/sofia/appointment
+LiveKit WebSocket Proxy: ws://localhost:3005/livekit-proxy
+🎟️ Generated debug token for Test User in room sofia-dental-1754051039041

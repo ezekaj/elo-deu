@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Connection Test</title>
+</head>
+<body>
+    <h1>Testing Sofia Dental Connection</h1>
+    <div id="status"></div>
+    <pre id="results"></pre>
+
+    <script>
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+        
+        async function testConnection() {
+            // Test 1: Config loaded
+            if (window.SOFIA_CONFIG) {
+                results.innerHTML += '✅ Config loaded\n';
+                results.innerHTML += 'API URL: ' + window.SOFIA_CONFIG.API_BASE_URL + '\n';
+            } else {
+                results.innerHTML += '❌ Config NOT loaded\n';
+                return;
+            }
+            
+            // Test 2: API connection
+            try {
+                status.innerHTML = 'Testing API...';
+                const response = await fetch(window.SOFIA_CONFIG.API_BASE_URL + '/api/appointments', {
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true',
+                        'Accept': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    results.innerHTML += '✅ API connection successful\n';
+                    const data = await response.json();
+                    results.innerHTML += 'Appointments count: ' + data.length + '\n';
+                } else {
+                    results.innerHTML += '❌ API connection failed: ' + response.status + '\n';
+                }
+            } catch (error) {
+                results.innerHTML += '❌ API error: ' + error.message + '\n';
+                console.error('API Error:', error);
+            }
+            
+            // Test 3: Socket.IO (not raw WebSocket)
+            status.innerHTML = 'Testing Socket.IO...';
+            results.innerHTML += '✅ Socket.IO test skipped (requires socket.io library)\n';
+            results.innerHTML += 'See socket-test.html for Socket.IO testing\n';
+            
+            status.innerHTML = 'Tests complete';
+        }
+        
+        // Load config first
+        const script = document.createElement('script');
+        script.src = '/config.js';
+        script.onload = testConnection;
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

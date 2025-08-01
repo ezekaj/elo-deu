@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Sofia Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        #log {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Sofia Integration Test</h1>
+    <button onclick="testTokenEndpoint()">1. Test Token Endpoint</button>
+    <button onclick="testLiveKitConnection()">2. Test LiveKit Connection</button>
+    <button onclick="testFullIntegration()">3. Test Full Integration</button>
+    <button onclick="clearLog()">Clear Log</button>
+    
+    <div id="log"></div>
+
+    <script src="https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.js"></script>
+    <script>
+        const log = document.getElementById('log');
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${timestamp}] ${message}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function clearLog() {
+            log.innerHTML = '';
+        }
+        
+        async function testTokenEndpoint() {
+            addLog('Testing token endpoint...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/livekit-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        identity: 'test-user-' + Date.now(),
+                        room: 'sofia-room'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                addLog('Token received successfully!', 'success');
+                addLog('Token: ' + data.token.substring(0, 50) + '...', 'info');
+                addLog('URL: ' + data.url, 'info');
+                
+                window.testToken = data.token;
+                window.testUrl = data.url;
+                
+                return data;
+            } catch (error) {
+                addLog('Token endpoint error: ' + error.message, 'error');
+                throw error;
+            }
+        }
+        
+        async function testLiveKitConnection() {
+            addLog('Testing LiveKit connection...', 'info');
+            
+            try {
+                // First get token if not available
+                if (!window.testToken) {
+                    addLog('Getting token first...', 'info');
+                    await testTokenEndpoint();
+                }
+                
+                addLog('Creating LiveKit room...', 'info');
+                const room = new LivekitClient.Room({
+                    adaptiveStream: true,
+                    dynacast: true
+                });
+                
+                addLog('Connecting to LiveKit...', 'info');
+                await room.connect(window.testUrl || 'ws://localhost:7880', window.testToken);
+                
+                addLog('Connected to LiveKit successfully!', 'success');
+                addLog('Local participant: ' + room.localParticipant.identity, 'info');
+                addLog('Room name: ' + room.name, 'info');
+                
+                // Check for other participants
+                const participants = Array.from(room.remoteParticipants.values());
+                addLog('Remote participants: ' + participants.length, 'info');
+                participants.forEach(p => {
+                    addLog(' - ' + p.identity, 'info');
+                });
+                
+                // Disconnect after 3 seconds
+                setTimeout(async () => {
+                    await room.disconnect();
+                    addLog('Disconnected from LiveKit', 'info');
+                }, 3000);
+                
+            } catch (error) {
+                addLog('LiveKit connection error: ' + error.message, 'error');
+                throw error;
+            }
+        }
+        
+        async function testFullIntegration() {
+            addLog('Starting full integration test...', 'info');
+            
+            try {
+                // Test token endpoint
+                await testTokenEndpoint();
+                addLog('✅ Token endpoint working', 'success');
+                
+                // Small delay
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Test LiveKit connection
+                await testLiveKitConnection();
+                addLog('✅ LiveKit connection working', 'success');
+                
+                addLog('All tests passed! Sofia integration is ready.', 'success');
+                
+            } catch (error) {
+                addLog('Integration test failed: ' + error.message, 'error');
+            }
+        }
+        
+        // Auto-run test on load
+        window.addEventListener('load', () => {
+            addLog('Test page loaded. Click buttons to test integration.', 'info');
+        });
+    </script>
+</body>
+</html>

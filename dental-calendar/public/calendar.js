@@ -1,6 +1,18 @@
 let calendar;
 let socket;
 
+// Get configuration
+let CONFIG = window.SOFIA_CONFIG || {
+    API_BASE_URL: 'http://localhost:3005',
+    WS_URL: 'ws://localhost:3005'
+};
+
+// Using local URLs for PC version - no override needed
+
+// Log configuration for debugging
+console.log('Calendar.js - CONFIG loaded:', CONFIG);
+console.log('Calendar.js - API_BASE_URL:', CONFIG.API_BASE_URL);
+
 // Initialize everything when page loads
 document.addEventListener('DOMContentLoaded', function() {
     initializeSocket();
@@ -9,7 +21,14 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeSocket() {
-    socket = io();
+    // Use configured WebSocket URL
+    const wsUrl = CONFIG.WS_URL || CONFIG.API_BASE_URL;
+    socket = io(wsUrl, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+    });
     
     socket.on('connect', function() {
         console.log('Connected to server');
@@ -46,6 +65,7 @@ function initializeCalendar() {
     
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
+        initialDate: new Date(), // Ensure we start at current month
         headerToolbar: {
             left: 'prev,next heute',
             center: 'title',
@@ -68,7 +88,46 @@ function initializeCalendar() {
             endTime: '18:00'
         },
         height: 'auto',
-        events: '/api/appointments',
+        events: function(fetchInfo, successCallback, failureCallback) {
+            console.log('Fetching appointments from:', CONFIG.API_BASE_URL + '/api/appointments');
+            fetch(CONFIG.API_BASE_URL + '/api/appointments', {
+                method: 'GET',
+                headers: {
+                    'ngrok-skip-browser-warning': 'true',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers.get('content-type'));
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text(); // Get as text first to debug
+            })
+            .then(text => {
+                console.log('Response text (first 200 chars):', text.substring(0, 200));
+                try {
+                    const data = JSON.parse(text);
+                    console.log('Appointments loaded:', data.length);
+                    console.log('First 3 appointments:', data.slice(0, 3).map(a => ({
+                        title: a.title,
+                        start: a.start
+                    })));
+                    console.log('Calling successCallback with', data.length, 'events');
+                    successCallback(data);
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    console.error('Full response:', text);
+                    throw e;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading appointments:', error);
+                showNotification('❌ Fehler beim Laden der Termine: ' + error.message, 'error');
+                failureCallback(error);
+            });
+        },
         
         // Event styling
         eventDisplay: 'block',
@@ -164,7 +223,7 @@ function createAppointment() {
         notes: document.getElementById('notes').value
     };
     
-    fetch('/api/appointments', {
+    fetch(CONFIG.API_BASE_URL + '/api/appointments', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -210,7 +269,7 @@ function showAppointmentDetails(event) {
 }
 
 function deleteAppointment(appointmentId) {
-    fetch(`/api/appointments/${appointmentId}`, {
+    fetch(`${CONFIG.API_BASE_URL}/api/appointments/${appointmentId}`, {
         method: 'DELETE'
     })
     .then(response => response.json())
@@ -233,7 +292,7 @@ function updateAppointmentTime(event) {
     const newTime = event.start.toISOString().split('T')[1].substring(0, 5);
     const endTime = event.end ? event.end.toISOString().split('T')[1].substring(0, 5) : calculateEndTime(newTime, 30);
     
-    fetch(`/api/appointments/${event.id}`, {
+    fetch(`${CONFIG.API_BASE_URL}/api/appointments/${event.id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -266,9 +325,76 @@ function refreshCalendar() {
     showNotification('🔄 Kalender aktualisiert', 'info');
 }
 
+function debugCalendar() {
+    const events = calendar.getEvents();
+    const currentView = calendar.view;
+    const viewStart = currentView.activeStart;
+    const viewEnd = currentView.activeEnd;
+    
+    console.log('=== Calendar Debug Info ===');
+    console.log('CONFIG.API_BASE_URL:', CONFIG.API_BASE_URL);
+    console.log('Total events loaded:', events.length);
+    console.log('Current view:', currentView.type);
+    console.log('View range:', viewStart.toISOString(), 'to', viewEnd.toISOString());
+    
+    // Count events in current view
+    const eventsInView = events.filter(event => {
+        const eventStart = event.start;
+        return eventStart >= viewStart && eventStart <= viewEnd;
+    });
+    
+    console.log('Events in current view:', eventsInView.length);
+    eventsInView.forEach(event => {
+        console.log(`  - ${event.title} at ${event.start.toISOString()}`);
+    });
+    
+    // Test API directly
+    console.log('Testing API directly...');
+    const testUrl = CONFIG.API_BASE_URL + '/api/appointments';
+    console.log('Test URL:', testUrl);
+    
+    // Test without ngrok header
+    fetch(testUrl)
+    .then(response => {
+        console.log('Without header - Status:', response.status);
+        return response.text();
+    })
+    .then(text => {
+        console.log('Without header - Response (first 100 chars):', text.substring(0, 100));
+    })
+    .catch(error => {
+        console.error('Without header - Error:', error);
+    });
+    
+    // Test with ngrok header
+    fetch(testUrl, {
+        headers: {
+            'ngrok-skip-browser-warning': 'true'
+        }
+    })
+    .then(response => {
+        console.log('With header - Status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('With header - API returned', data.length, 'appointments');
+        const july2025 = data.filter(e => e.start && e.start.includes('2025-07'));
+        console.log('July 2025 appointments:', july2025.length);
+        july2025.forEach(e => {
+            console.log(`  - ${e.title} at ${e.start}`);
+        });
+    })
+    .catch(error => {
+        console.error('With header - Error:', error);
+    });
+    
+    showNotification(`🔍 Debug: ${events.length} Events geladen, ${eventsInView.length} im aktuellen Monat`, 'info');
+}
+
 function showToday() {
     calendar.today();
-    showNotification('📅 Heute angezeigt', 'info');
+    const today = new Date();
+    showNotification(`📅 Heute: ${today.toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, 'info');
 }
 
 function updateConnectionStatus(connected) {

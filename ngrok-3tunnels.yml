@@ -1,0 +1,12 @@
+version: "2"
+authtoken: YOUR_AUTH_TOKEN
+tunnels:
+  calendar:
+    proto: http
+    addr: 3005
+  livekit:
+    proto: http
+    addr: 7880
+  agent:
+    proto: http
+    addr: 8080

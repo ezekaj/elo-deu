@@ -6,9 +6,9 @@ let dataChannel = null;
 let transcriptionBuffer = '';
 let sofiaResponses = [];
 
-// Configuration
-const LIVEKIT_URL = 'ws://localhost:7880';
-const SOFIA_AGENT_API = '/api/sofia/connect';
+// Configuration - use from config.js
+const LIVEKIT_URL = window.SOFIA_CONFIG ? window.SOFIA_CONFIG.LIVEKIT_URL : 'ws://localhost:7880';
+const SOFIA_AGENT_API = window.SOFIA_CONFIG ? window.SOFIA_CONFIG.API_BASE_URL + '/api/sofia/connect' : '/api/sofia/connect';
 
 // UI Elements
 let sofiaInterface = null;
@@ -33,12 +33,20 @@ window.addEventListener('load', () => {
     const possibleNames = ['LiveKitClient', 'LiveKit', 'livekitClient', 'livekit'];
     let found = false;
     
-    for (const name of possibleNames) {
-        if (typeof window[name] !== 'undefined') {
-            window.livekit = window[name];
-            console.log(`LiveKit SDK found as: ${name}`);
-            found = true;
-            break;
+    // Check for LivekitClient specifically (from the CDN)
+    if (typeof window.LivekitClient !== 'undefined') {
+        window.livekit = window.LivekitClient;
+        console.log('LiveKit SDK found as: LivekitClient');
+        found = true;
+    } else {
+        // Fall back to other possible names
+        for (const name of possibleNames) {
+            if (typeof window[name] !== 'undefined') {
+                window.livekit = window[name];
+                console.log(`LiveKit SDK found as: ${name}`);
+                found = true;
+                break;
+            }
         }
     }
     

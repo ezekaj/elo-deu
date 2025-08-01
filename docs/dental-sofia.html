@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EloSofia Dental Calendar - Fresh</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/main.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/main.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/main.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>EloSofia Zahnarzthelferin</h1>
+    
+    <div id="connectionStatus" class="connection-status">
+        <span id="statusIndicator"></span>
+        <span id="statusText">Verbindung wird hergestellt...</span>
+    </div>
+    
+    <button id="sofiaAgentBtn" class="sofia-agent-btn">
+        <span>Sofia AI Assistant</span>
+    </button>
+    
+    <div id="sofiaInterface" class="sofia-interface">
+        <div class="sofia-header">
+            <h3>Sofia AI Assistant</h3>
+            <button onclick="closeSofiaInterface()" class="close-btn">✕</button>
+        </div>
+        <div class="sofia-content">
+            <div id="voiceIndicator" class="voice-indicator inactive">
+                <span class="voice-icon">🎤</span>
+                <span id="sofiaStatusText">Getrennt</span>
+            </div>
+            <div id="sofiaChat" class="sofia-chat"></div>
+        </div>
+    </div>
+    
+    <div id="calendar"></div>
+    
+    <!-- Core libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/locales/de.global.min.js"></script>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    
+    <!-- LiveKit SDK -->
+    <script src="https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.js"></script>
+    
+    <!-- Fresh config without cache -->
+    <script>
+        // Inline config to avoid caching issues
+        window.CONFIG = {
+            API_BASE_URL: 'https://6ee900d2bd98.ngrok-free.app',
+            WS_URL: 'wss://6ee900d2bd98.ngrok-free.app',
+            LIVEKIT_URL: 'wss://6ee900d2bd98.ngrok-free.app/livekit-proxy',
+            LIVEKIT_API_URL: 'https://6ee900d2bd98.ngrok-free.app',
+            CRM_URL: 'https://6ee900d2bd98.ngrok-free.app'
+        };
+        console.log('CONFIG loaded:', window.CONFIG);
+    </script>
+    
+    <!-- Calendar script -->
+    <script src="calendar.js"></script>
+    
+    <!-- Sofia debug script inline to avoid caching -->
+    <script>
+        // Sofia Voice Debug - Inline Version
+        console.log('[Sofia Debug Inline] Starting...');
+        
+        let room = null;
+        let isConnecting = false;
+        let audioTrack = null;
+        
+        function updateStatus(message, isError = false) {
+            console.log(`[Sofia Debug] ${message}`);
+            const statusText = document.getElementById('sofiaStatusText');
+            if (statusText) {
+                statusText.textContent = message;
+                statusText.style.color = isError ? '#c00' : '';
+            }
+            
+            const chatEl = document.getElementById('sofiaChat');
+            if (chatEl) {
+                const debugMsg = document.createElement('div');
+                debugMsg.className = 'sofia-message system';
+                debugMsg.style.fontSize = '12px';
+                debugMsg.style.color = isError ? '#c00' : '#666';
+                debugMsg.textContent = `[Debug] ${message}`;
+                chatEl.appendChild(debugMsg);
+            }
+        }
+        
+        async function ensureLiveKitLoaded() {
+            updateStatus('Checking for LiveKit SDK...');
+            
+            // Check all possible locations
+            const possibleSDKs = [
+                { name: 'window.LivekitClient', obj: window.LivekitClient },
+                { name: 'window.LiveKitClient', obj: window.LiveKitClient },
+                { name: 'window.livekit', obj: window.livekit },
+                { name: 'window.LiveKit', obj: window.LiveKit }
+            ];
+            
+            for (const sdk of possibleSDKs) {
+                if (sdk.obj) {
+                    updateStatus(`Found SDK at ${sdk.name}`);
+                    window.LiveKitClient = sdk.obj;
+                    return true;
+                }
+            }
+            
+            updateStatus('LiveKit SDK not found in any location!', true);
+            
+            // Try one more time with correct case
+            if (window.LivekitClient) {
+                updateStatus('Found SDK at window.LivekitClient (correct case)');
+                window.LiveKitClient = window.LivekitClient;
+                return true;
+            }
+            
+            throw new Error('LiveKit SDK not available');
+        }
+        
+        async function checkMicrophonePermission() {
+            updateStatus('Checking microphone permission...');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                updateStatus('Microphone permission granted!');
+                stream.getTracks().forEach(track => track.stop());
+                return true;
+            } catch (error) {
+                updateStatus(`Microphone error: ${error.message}`, true);
+                throw error;
+            }
+        }
+        
+        async function startVoiceAssistant() {
+            console.log('[Sofia Debug] Starting voice assistant...');
+            
+            const statusEl = document.getElementById('voiceIndicator');
+            const chatEl = document.getElementById('sofiaChat');
+            
+            if (chatEl) chatEl.innerHTML = '';
+            
+            if (isConnecting || room) {
+                updateStatus('Already connecting or connected');
+                return;
+            }
+            
+            isConnecting = true;
+            updateStatus('Starting initialization...');
+            
+            try {
+                await ensureLiveKitLoaded();
+                await checkMicrophonePermission();
+                
+                updateStatus('Requesting connection token...');
+                const apiUrl = `${window.CONFIG.API_BASE_URL}/api/sofia/token`;
+                updateStatus(`Token URL: ${apiUrl}`);
+                
+                const tokenResponse = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({
+                        participant_name: 'User ' + Date.now()
+                    })
+                });
+                
+                updateStatus(`Token response status: ${tokenResponse.status}`);
+                
+                if (!tokenResponse.ok) {
+                    const errorText = await tokenResponse.text();
+                    throw new Error(`Token error ${tokenResponse.status}: ${errorText}`);
+                }
+                
+                const tokenData = await tokenResponse.json();
+                updateStatus(`Token received for room: ${tokenData.roomName}`);
+                
+                updateStatus('Creating LiveKit room...');
+                // Ensure we have the correct SDK reference
+                const SDK = window.LiveKitClient || window.LivekitClient;
+                if (!SDK || !SDK.Room) {
+                    throw new Error('LiveKit SDK Room constructor not found');
+                }
+                room = new SDK.Room({
+                    adaptiveStream: true,
+                    dynacast: true
+                });
+                
+                updateStatus('Room created, connecting...');
+                
+                room.on('connected', async () => {
+                    updateStatus('Connected to LiveKit!');
+                    statusEl.classList.remove('inactive');
+                    
+                    try {
+                        updateStatus('Creating local audio track...');
+                        const SDK = window.LiveKitClient || window.LivekitClient;
+                        audioTrack = await SDK.createLocalAudioTrack();
+                        
+                        updateStatus('Publishing audio track...');
+                        await room.localParticipant.publishTrack(audioTrack);
+                        updateStatus('🎤 Microphone active - You can speak!');
+                    } catch (micError) {
+                        updateStatus(`Microphone error: ${micError.message}`, true);
+                    }
+                });
+                
+                room.on('disconnected', (reason) => {
+                    updateStatus(`Disconnected: ${reason}`);
+                    handleDisconnection();
+                });
+                
+                await room.connect(tokenData.url, tokenData.token);
+                isConnecting = false;
+                
+            } catch (error) {
+                updateStatus(`Error: ${error.message}`, true);
+                console.error('[Sofia Debug] Full error:', error);
+                isConnecting = false;
+                if (room) {
+                    room.disconnect();
+                    room = null;
+                }
+            }
+        }
+        
+        function stopVoiceAssistant() {
+            updateStatus('Stopping Sofia...');
+            if (room) {
+                room.disconnect();
+                room = null;
+            }
+            if (audioTrack) {
+                audioTrack.stop();
+                audioTrack = null;
+            }
+            isConnecting = false;
+            document.getElementById('voiceIndicator').classList.add('inactive');
+        }
+        
+        function handleDisconnection() {
+            updateStatus('Handling disconnection...');
+            document.getElementById('voiceIndicator').classList.add('inactive');
+            if (audioTrack) {
+                audioTrack.stop();
+                audioTrack = null;
+            }
+            room = null;
+            isConnecting = false;
+        }
+        
+        // Override functions
+        window.startVoiceAssistant = startVoiceAssistant;
+        window.stopVoiceAssistant = stopVoiceAssistant;
+        
+        // Set up button
+        document.addEventListener('DOMContentLoaded', () => {
+            const sofiaBtn = document.getElementById('sofiaAgentBtn');
+            if (sofiaBtn) {
+                sofiaBtn.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const sofiaInterface = document.getElementById('sofiaInterface');
+                    
+                    if (this.classList.contains('active')) {
+                        sofiaInterface.classList.add('visible');
+                        setTimeout(startVoiceAssistant, 100);
+                    } else {
+                        sofiaInterface.classList.remove('visible');
+                        stopVoiceAssistant();
+                    }
+                });
+            }
+        });
+        
+        window.closeSofiaInterface = function() {
+            const sofiaInterface = document.getElementById('sofiaInterface');
+            const sofiaBtn = document.getElementById('sofiaAgentBtn');
+            if (sofiaInterface) sofiaInterface.classList.remove('visible');
+            if (sofiaBtn) sofiaBtn.classList.remove('active');
+            stopVoiceAssistant();
+        };
+        
+        console.log('[Sofia Debug Inline] Ready!');
+    </script>
+</body>
+</html>

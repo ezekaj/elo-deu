@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Sofia Minimal Test</title>
+    <script src="config.js"></script>
+    <script src="https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        #status {
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Sofia Minimal Test</h1>
+    
+    <button onclick="testConnection()">Test Sofia Connection</button>
+    <button onclick="disconnect()">Disconnect</button>
+    
+    <div id="status">
+        <h3>Status</h3>
+        <div id="status-text">Ready to test...</div>
+    </div>
+    
+    <div id="log">
+        <h3>Log</h3>
+    </div>
+    
+    <script>
+        let room = null;
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            console.log(message);
+        }
+        
+        function updateStatus(text) {
+            document.getElementById('status-text').textContent = text;
+        }
+        
+        async function testConnection() {
+            try {
+                log('Starting connection test...');
+                updateStatus('Requesting token...');
+                
+                // Step 1: Get token
+                const apiBase = CONFIG.API_BASE_URL || 'http://localhost:3005';
+                const response = await fetch(`${apiBase}/api/sofia/token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({
+                        participant_name: 'Minimal Test User'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Token request failed: ${response.status}`);
+                }
+                
+                const { token, url, roomName } = await response.json();
+                log(`Token received for room: ${roomName}`, 'success');
+                updateStatus('Connecting to LiveKit...');
+                
+                // Step 2: Connect to LiveKit
+                room = new LiveKitClient.Room();
+                
+                room.on('connected', async () => {
+                    log('Connected to LiveKit!', 'success');
+                    updateStatus('Connected - Enabling microphone...');
+                    
+                    // Enable microphone
+                    try {
+                        await room.localParticipant.setMicrophoneEnabled(true);
+                        log('Microphone enabled!', 'success');
+                        updateStatus('Fully connected - Microphone active');
+                    } catch (e) {
+                        log(`Microphone error: ${e.message}`, 'error');
+                        updateStatus('Connected but microphone failed');
+                    }
+                });
+                
+                room.on('participantConnected', (participant) => {
+                    log(`Participant connected: ${participant.identity}`, 'info');
+                    if (participant.identity.toLowerCase().includes('sofia')) {
+                        log('SOFIA AGENT JOINED!', 'success');
+                        updateStatus('Sofia is in the room!');
+                    }
+                });
+                
+                room.on('dataReceived', (payload, participant) => {
+                    const message = new TextDecoder().decode(payload);
+                    log(`Data from ${participant.identity}: ${message}`, 'info');
+                });
+                
+                room.on('disconnected', (reason) => {
+                    log(`Disconnected: ${reason}`, 'error');
+                    updateStatus('Disconnected');
+                });
+                
+                await room.connect(url, token);
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                updateStatus(`Error: ${error.message}`);
+            }
+        }
+        
+        function disconnect() {
+            if (room) {
+                room.disconnect();
+                room = null;
+                log('Disconnected manually', 'info');
+                updateStatus('Disconnected');
+            }
+        }
+        
+        // Initial log
+        log('Page loaded. API URL: ' + (CONFIG.API_BASE_URL || 'http://localhost:3005'));
+    </script>
+</body>
+</html>

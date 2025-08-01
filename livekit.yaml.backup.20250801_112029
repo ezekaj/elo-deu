@@ -1,0 +1,65 @@
+# Complete LiveKit Configuration for TCP-Only Mode
+port: 7880
+bind_addresses:
+  - 0.0.0.0
+
+rtc:
+  # TCP configuration for global accessibility
+  tcp_port: 7881
+  port_range_start: 0  # Disable UDP
+  port_range_end: 0    # Disable UDP
+  
+  # Force TCP-only mode
+  use_ice_tcp: true
+  ice_transport_policy: relay
+  
+  # ICE configuration
+  ice_lite: true
+  use_external_ip: true
+  external_ip: auto  # Or specify your public IP
+  enable_loopback_candidate: false
+  
+  # STUN servers for ICE negotiation
+  stun_servers:
+    - stun:stun.l.google.com:19302
+    - stun:stun1.l.google.com:19302
+  
+  # Network interfaces
+  interfaces:
+    include:
+      - eth0
+      - wlan0
+    exclude:
+      - docker0
+
+# TURN configuration (REQUIRED for TCP-only)
+turn:
+  enabled: true
+  domain: localhost  # For local testing
+  protocol: tcp
+  port: 3478
+  username: sofia
+  password: turn-password-123
+  tls_port: 5349
+  external_tls: false
+
+room:
+  auto_create: true
+  empty_timeout: 300
+  max_participants: 50
+  enable_playout_delay: true
+  adaptive_stream: true
+
+webhook:
+  urls:
+    room_started: http://sofia-agent:8080/webhook/room-started
+    participant_joined: http://sofia-agent:8080/webhook/participant-joined
+  api_key: secret
+
+keys:
+  devkey: secret
+
+logging:
+  level: info
+  json: false
+  sample: false

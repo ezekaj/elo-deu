@@ -7,15 +7,7 @@ let CONFIG = window.SOFIA_CONFIG || {
     WS_URL: 'ws://localhost:3005'
 };
 
-// Override with ngrok URL if not on localhost
-if (window.location.hostname !== 'localhost' && CONFIG.API_BASE_URL.includes('localhost')) {
-    console.log('Calendar.js - Overriding localhost URL with ngrok URL');
-    CONFIG = {
-        ...CONFIG,
-        API_BASE_URL: 'https://772ec752906e.ngrok-free.app',
-        WS_URL: 'wss://772ec752906e.ngrok-free.app'
-    };
-}
+// Using local URLs for PC version - no override needed
 
 // Log configuration for debugging
 console.log('Calendar.js - CONFIG loaded:', CONFIG);
@@ -23,19 +15,42 @@ console.log('Calendar.js - API_BASE_URL:', CONFIG.API_BASE_URL);
 
 // Initialize everything when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize immediately and check connection
+    console.log('DOM loaded, initializing...');
+    updateConnectionStatus(false); // Start with disconnected
+    
     initializeSocket();
     initializeCalendar();
     setupEventListeners();
+    
+    // Also try API connection as fallback
+    setTimeout(() => {
+        const statusEl = document.getElementById('connectionStatus');
+        if (statusEl && statusEl.textContent.includes('getrennt')) {
+            // If still disconnected after 2 seconds, test API directly
+            fetch(CONFIG.API_BASE_URL + '/api/appointments', {
+                headers: { 'ngrok-skip-browser-warning': 'true' }
+            }).then(response => {
+                if (response.ok) {
+                    statusEl.textContent = '🟢 Verbunden (API)';
+                    statusEl.className = 'connection-status connected';
+                }
+            }).catch(() => {});
+        }
+    }, 2000);
 });
 
 function initializeSocket() {
     // Use configured WebSocket URL
-    const wsUrl = CONFIG.WS_URL || CONFIG.API_BASE_URL;
+    const wsUrl = CONFIG.API_BASE_URL || CONFIG.WS_URL;
     socket = io(wsUrl, {
-        transports: ['websocket', 'polling'],
+        transports: ['polling', 'websocket'],
         reconnection: true,
         reconnectionAttempts: 5,
-        reconnectionDelay: 1000
+        reconnectionDelay: 1000,
+        extraHeaders: {
+            'ngrok-skip-browser-warning': 'true'
+        }
     });
     
     socket.on('connect', function() {
@@ -234,7 +249,8 @@ function createAppointment() {
     fetch(CONFIG.API_BASE_URL + '/api/appointments', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
         },
         body: JSON.stringify(formData)
     })

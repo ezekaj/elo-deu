@@ -21,15 +21,24 @@ window.addEventListener('load', async () => {
                 this.updateUI('connecting');
                 console.log('Getting LiveKit token...');
                 
-                // Get token from server
-                const response = await fetch('/api/sofia/connect', {
+                // Get configuration
+                const CONFIG = window.SOFIA_CONFIG || {};
+                const apiUrl = CONFIG.API_BASE_URL || '';
+                
+                // Get token from server using the new endpoint
+                const response = await fetch(apiUrl + '/api/livekit-token', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
                     },
                     body: JSON.stringify({
-                        participantName: 'Calendar User',
-                        roomName: 'sofia-dental-' + Date.now()
+                        identity: 'Calendar User ' + Date.now(),
+                        room: 'sofia-dental-' + Date.now(),
+                        metadata: JSON.stringify({
+                            request_agent: true,
+                            agent_type: 'dental-assistant'
+                        })
                     })
                 });
                 
@@ -93,8 +102,12 @@ window.addEventListener('load', async () => {
                 // Setup event handlers before connecting
                 this.setupEventHandlers();
                 
+                // Use local LiveKit URL for PC version
+                const livekitUrl = window.SOFIA_CONFIG?.LIVEKIT_URL || url || 'ws://localhost:7880';
+                console.log('Connecting to LiveKit at:', livekitUrl);
+                
                 // Connect to room
-                await this.room.connect(url, token);
+                await this.room.connect(livekitUrl, token);
                 console.log('Connected to LiveKit room!');
                 
                 // Enable microphone

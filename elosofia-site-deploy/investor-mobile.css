@@ -1,0 +1,468 @@
+/**
+ * Sofia Investor Demo - Mobile & Tablet Optimizations
+ * Ensures perfect presentation on any device investors might use
+ */
+
+/* Enhanced Mobile Responsiveness */
+@media (max-width: 1200px) {
+    .hero h1 {
+        font-size: 3rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.3rem;
+    }
+    
+    .features-preview {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero {
+        padding: 1rem;
+        min-height: 100vh;
+    }
+    
+    .hero h1 {
+        font-size: 2.2rem;
+        line-height: 1.1;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .hero-description {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Mobile-optimized buttons */
+    .btn {
+        min-height: 50px;
+        font-size: 1rem;
+        padding: 15px 25px;
+        min-width: 250px;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto 2rem;
+    }
+    
+    /* Single column layout for mobile */
+    .features-preview {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .feature-card {
+        padding: 1.5rem;
+    }
+    
+    /* Mobile demo modal */
+    .modal-content {
+        width: 95%;
+        height: 90vh;
+        margin: 5% auto;
+    }
+    
+    .modal-header {
+        padding: 1.5rem;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    /* Stack demo layout on mobile */
+    .demo-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .demo-scenarios {
+        order: 2;
+    }
+    
+    .demo-display {
+        order: 1;
+        min-height: 400px;
+    }
+    
+    /* Mobile scenario buttons */
+    .scenario-btn {
+        padding: 1rem;
+        font-size: 0.9rem;
+        min-height: 60px;
+    }
+    
+    /* Mobile metrics */
+    .metrics {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .metric-card {
+        padding: 1rem;
+    }
+    
+    .metric-value {
+        font-size: 1.5rem;
+    }
+    
+    .metric-label {
+        font-size: 0.8rem;
+    }
+    
+    /* Mobile conversation */
+    .conversation {
+        height: 300px;
+        font-size: 0.9rem;
+    }
+    
+    .message {
+        padding: 0.7rem 1rem;
+        font-size: 0.9rem;
+        max-width: 90%;
+    }
+    
+    .sofia-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+}
+
+/* Tablet-specific optimizations (iPad, etc.) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .hero h1 {
+        font-size: 3.5rem;
+    }
+    
+    .demo-container {
+        grid-template-columns: 1fr 1.2fr;
+    }
+    
+    .features-preview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Tablet buttons - perfect for touch */
+    .btn {
+        min-height: 48px;
+        padding: 12px 24px;
+    }
+    
+    .scenario-btn {
+        min-height: 65px;
+        padding: 1.2rem;
+    }
+    
+    /* Tablet metrics layout */
+    .metrics {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
+
+/* Landscape phone optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+    .hero {
+        min-height: 100vh;
+        padding: 1rem;
+    }
+    
+    .hero h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .hero-description {
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .features-preview {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .feature-card {
+        padding: 1rem;
+    }
+    
+    .feature-title {
+        font-size: 1rem;
+    }
+    
+    .feature-desc {
+        font-size: 0.8rem;
+    }
+    
+    .modal-content {
+        height: 95vh;
+        width: 98%;
+    }
+}
+
+/* High DPI displays (Retina, 4K) */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .hero h1 {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    
+    .btn {
+        -webkit-font-smoothing: antialiased;
+    }
+    
+    .sofia-avatar {
+        -webkit-font-smoothing: antialiased;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    /* Increase touch targets */
+    .btn, .scenario-btn, .close {
+        min-height: 44px;
+    }
+    
+    .scenario-btn {
+        min-height: 60px;
+    }
+    
+    /* Remove hover effects on touch devices */
+    .btn:hover,
+    .scenario-btn:hover,
+    .feature-card:hover {
+        transform: none;
+    }
+    
+    /* Add active states for better feedback */
+    .btn:active {
+        transform: scale(0.98);
+    }
+    
+    .scenario-btn:active {
+        transform: scale(0.98);
+    }
+}
+
+/* Dark mode support for modern devices */
+@media (prefers-color-scheme: dark) {
+    /* Optional: Adapt for devices with dark mode preference */
+    .modal-content {
+        background: #1a1a1a;
+        color: #ffffff;
+    }
+    
+    .demo-scenarios {
+        background: #2a2a2a;
+    }
+    
+    .scenario-btn {
+        background: #3a3a3a;
+        color: #ffffff;
+        border-color: #4a4a4a;
+    }
+    
+    .scenario-btn:hover {
+        background: #4a4a4a;
+    }
+    
+    .conversation {
+        background: #2a2a2a;
+    }
+    
+    .metric-card {
+        background: #2a2a2a;
+        color: #ffffff;
+    }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .hero-content {
+        animation: none;
+    }
+    
+    .sofia-avatar {
+        animation: none;
+    }
+    
+    .typing-dots span {
+        animation: none;
+    }
+}
+
+/* Print styles (for handouts) */
+@media print {
+    .hero {
+        background: white !important;
+        color: black !important;
+        min-height: auto;
+    }
+    
+    .btn, .modal {
+        display: none !important;
+    }
+    
+    .features-preview {
+        page-break-inside: avoid;
+    }
+    
+    .feature-card {
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+    }
+}
+
+/* Very small screens (320px) */
+@media (max-width: 375px) {
+    .hero {
+        padding: 0.5rem;
+    }
+    
+    .hero h1 {
+        font-size: 1.8rem;
+    }
+    
+    .btn {
+        min-width: 200px;
+        font-size: 0.9rem;
+        padding: 12px 20px;
+    }
+    
+    .feature-card {
+        padding: 1rem;
+    }
+    
+    .feature-icon {
+        font-size: 2rem;
+    }
+    
+    .modal-content {
+        width: 98%;
+        height: 95vh;
+        margin: 2.5% auto;
+    }
+    
+    .modal-body {
+        padding: 0.5rem;
+    }
+    
+    .conversation {
+        height: 250px;
+    }
+    
+    .metrics {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+}
+
+/* Loading states for slow connections */
+.demo-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(102, 126, 234, 0.9);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    font-family: 'Inter', sans-serif;
+}
+
+.demo-loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 2rem;
+}
+
+.demo-loading-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+    max-width: 300px;
+}
+
+/* Professional presentation mode */
+.presentation-mode {
+    cursor: none;
+}
+
+.presentation-mode .btn:hover {
+    cursor: default;
+}
+
+/* Investor-specific enhancements */
+.investor-highlight {
+    position: relative;
+}
+
+.investor-highlight::after {
+    content: '💰';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    font-size: 1.2rem;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Success animations for demo moments */
+.demo-success-flash {
+    animation: successFlash 0.6s ease-in-out;
+}
+
+@keyframes successFlash {
+    0% { background-color: rgba(0, 184, 148, 0); }
+    50% { background-color: rgba(0, 184, 148, 0.2); }
+    100% { background-color: rgba(0, 184, 148, 0); }
+}

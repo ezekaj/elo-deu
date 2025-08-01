@@ -1,0 +1,142 @@
+version: '3.8'
+
+services:
+  # LiveKit Server for Voice Processing - TCP-Only Mode
+  livekit:
+    image: livekit/livekit-server:latest
+    ports:
+      - "7880:7880"
+      - "7881:7881/tcp"  # TCP only, no UDP
+    environment:
+      - "LIVEKIT_KEYS=devkey: secret"
+      - "LIVEKIT_LOG_LEVEL=info"
+    command: --config /etc/livekit.yaml
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml
+    networks:
+      - sofia-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:7880/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Sofia Voice Agent with Health Server
+  sofia-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.sofia
+    environment:
+      - LIVEKIT_URL=ws://livekit:7880
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=secret
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CALENDAR_URL=http://dental-calendar:3005
+      - HEALTH_CHECK_PORT=8080
+    depends_on:
+      livekit:
+        condition: service_healthy
+      dental-calendar:
+        condition: service_started
+    networks:
+      - sofia-network
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Minimal TURN Server for TCP Relay
+  turn-server:
+    image: coturn/coturn:latest
+    ports:
+      - "3478:3478/tcp"
+      - "5349:5349/tcp"
+    environment:
+      - TURNSERVER_ENABLED=1
+      - TURNSERVER_REALM=sofia.local
+      - TURNSERVER_USER=sofia:turn-password-123
+      - TURNSERVER_NO_UDP=1
+      - TURNSERVER_NO_UDP_RELAY=1
+      - TURNSERVER_TCP_PROXY_PORT=7881
+    networks:
+      - sofia-network
+    restart: unless-stopped
+    command: >
+      -n
+      --log-file=stdout
+      --listening-port=3478
+      --tls-listening-port=5349
+      --realm=sofia.local
+      --user=sofia:turn-password-123
+      --no-udp
+      --no-udp-relay
+      --no-stun
+      --no-multicast-peers
+
+  # Dental Calendar with Voice Integration
+  dental-calendar:
+    build:
+      context: ./dental-calendar
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3005"
+    volumes:
+      - calendar-data:/app/data
+    networks:
+      - sofia-network
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - SOFIA_VOICE_ENABLED=true
+      - LIVEKIT_URL=ws://livekit:7880
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=secret
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # CRM Dashboard
+  crm-dashboard:
+    build:
+      context: ./crm
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - calendar-data:/app/data
+    networks:
+      - sofia-network
+    restart: unless-stopped
+
+  # Sofia Web Interface
+  sofia-web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "5001:5001"
+    depends_on:
+      - dental-calendar
+      - sofia-agent
+    networks:
+      - sofia-network
+    restart: unless-stopped
+
+volumes:
+  calendar-data:
+
+networks:
+  sofia-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: sofia-br

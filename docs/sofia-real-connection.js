@@ -102,8 +102,8 @@ window.addEventListener('load', async () => {
                 // Setup event handlers before connecting
                 this.setupEventHandlers();
                 
-                // Use configured LiveKit URL
-                const livekitUrl = CONFIG.LIVEKIT_URL || url || 'wss://9608f5535742.ngrok-free.app';
+                // Use local LiveKit URL for PC version
+                const livekitUrl = window.SOFIA_CONFIG?.LIVEKIT_URL || url || 'ws://localhost:7880';
                 console.log('Connecting to LiveKit at:', livekitUrl);
                 
                 // Connect to room

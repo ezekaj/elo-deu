@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofia WebSocket Voice Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            margin: 10px 0;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .test-info {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .test-info h3 {
+            color: #2e7d32;
+            margin-top: 0;
+        }
+        
+        .test-steps {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .test-steps h3 {
+            color: #f57c00;
+            margin-top: 0;
+        }
+        
+        .test-steps ol {
+            padding-left: 20px;
+        }
+        
+        .test-steps li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .quick-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .quick-btn.primary {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .quick-btn.secondary {
+            background: #2196f3;
+            color: white;
+        }
+        
+        .quick-btn.info {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .quick-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.8;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-indicator.green { background: #4caf50; }
+        .status-indicator.red { background: #f44336; }
+        .status-indicator.yellow { background: #ff9800; }
+        
+        @media (max-width: 768px) {
+            .quick-actions {
+                flex-direction: column;
+            }
+            
+            .quick-btn {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Sofia WebSocket Voice Test</h1>
+            <p>Testen Sie die Sprachintegration mit Sofia über WebSocket</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="test-info">
+                <h3>🎯 Was wird getestet?</h3>
+                <p>Diese Seite testet die WebSocket-basierte Sprachintegration mit Sofia, die als Alternative zu LiveKit entwickelt wurde. Sie ermöglicht:</p>
+                <ul>
+                    <li><span class="status-indicator green"></span>Echtzeit-Spracherkennung mit OpenAI Whisper oder Google Speech</li>
+                    <li><span class="status-indicator green"></span>Text-zu-Sprache mit Google TTS</li>
+                    <li><span class="status-indicator green"></span>Direkte Integration mit Sofia Agent (ohne Änderungen am Agent)</li>
+                    <li><span class="status-indicator green"></span>Terminbuchung über Sprache oder Text</li>
+                    <li><span class="status-indicator green"></span>Mehrere gleichzeitige Browser-Sessions</li>
+                </ul>
+            </div>
+            
+            <div class="test-steps">
+                <h3>📋 Test-Schritte</h3>
+                <ol>
+                    <li><strong>WebSocket Bridge starten:</strong> <code>python sofia_websocket_bridge.py --dev</code></li>
+                    <li><strong>Kalender-Server läuft:</strong> Sollte bereits auf Port 3005 laufen</li>
+                    <li><strong>Verbinden:</strong> Klicken Sie auf "Verbinden" unten</li>
+                    <li><strong>Mikrofon testen:</strong> Klicken Sie "Aufnehmen" und sprechen Sie</li>
+                    <li><strong>Text testen:</strong> Geben Sie eine Nachricht ein</li>
+                    <li><strong>Termin buchen:</strong> Sagen Sie "Ich möchte einen Termin"</li>
+                </ol>
+            </div>
+            
+            <div class="quick-actions">
+                <button class="quick-btn primary" onclick="testConnection()">🔗 Verbindung testen</button>
+                <button class="quick-btn secondary" onclick="testAudio()">🎤 Audio testen</button>
+                <button class="quick-btn info" onclick="showDebugInfo()">🔧 Debug Info</button>
+                <a href="http://localhost:3005" class="quick-btn secondary">📅 Kalender öffnen</a>
+                <button class="quick-btn info" onclick="testAppointment()">📋 Termin-Test</button>
+            </div>
+            
+            <!-- Sofia WebSocket Client wird hier geladen -->
+            <div id="sofia-test-area">
+                <!-- Der WebSocket Client erstellt hier seine UI -->
+            </div>
+            
+            <div id="test-results" style="margin-top: 30px; display: none;">
+                <h3>📊 Test-Ergebnisse</h3>
+                <div id="test-output"></div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Sofia WebSocket Bridge - Dental Voice Assistant Integration</p>
+        </div>
+    </div>
+    
+    <!-- Sofia WebSocket Client laden -->
+    <script src="sofia-websocket-client.js"></script>
+    
+    <script>
+        // Test-Funktionen
+        function testConnection() {
+            console.log('🔗 Testing connection...');
+            
+            if (window.sofiaWebSocketClient) {
+                if (window.sofiaWebSocketClient.isConnected) {
+                    window.sofiaWebSocketClient.ping();
+                    showTestResult('✅ WebSocket-Verbindung aktiv!', 'success');
+                } else {
+                    window.sofiaWebSocketClient.connect();
+                    showTestResult('🔄 Verbindungsversuch gestartet...', 'info');
+                }
+            } else {
+                showTestResult('❌ Sofia WebSocket Client nicht geladen', 'error');
+            }
+        }
+        
+        function testAudio() {
+            console.log('🎤 Testing audio...');
+            
+            if (window.sofiaWebSocketClient && window.sofiaWebSocketClient.isConnected) {
+                if (window.sofiaWebSocketClient.isRecording) {
+                    window.sofiaWebSocketClient.stopRecording();
+                    showTestResult('🛑 Aufnahme gestoppt', 'info');
+                } else {
+                    window.sofiaWebSocketClient.startRecording();
+                    showTestResult('🎤 Aufnahme gestartet - sprechen Sie jetzt!', 'success');
+                }
+            } else {
+                showTestResult('❌ Nicht verbunden - bitte zuerst verbinden', 'error');
+            }
+        }
+        
+        function testAppointment() {
+            console.log('📋 Testing appointment booking...');
+            
+            if (window.sofiaWebSocketClient && window.sofiaWebSocketClient.isConnected) {
+                window.sofiaWebSocketClient.sendMessage({
+                    type: 'text_message',
+                    text: 'Ich möchte einen Termin für nächste Woche vereinbaren'
+                });
+                showTestResult('📋 Termin-Anfrage gesendet', 'success');
+            } else {
+                showTestResult('❌ Nicht verbunden - bitte zuerst verbinden', 'error');
+            }
+        }
+        
+        function showDebugInfo() {
+            console.log('🔧 Showing debug info...');
+            
+            const debugDiv = document.getElementById('sofia-debug');
+            if (debugDiv) {
+                debugDiv.style.display = debugDiv.style.display === 'none' ? 'block' : 'none';
+            }
+            
+            if (window.sofiaWebSocketClient) {
+                window.sofiaWebSocketClient.showStats();
+                showTestResult('🔧 Debug-Informationen angezeigt', 'info');
+            } else {
+                showTestResult('❌ Sofia Client nicht verfügbar', 'error');
+            }
+        }
+        
+        function showTestResult(message, type) {
+            const resultsDiv = document.getElementById('test-results');
+            const outputDiv = document.getElementById('test-output');
+            
+            resultsDiv.style.display = 'block';
+            
+            const resultItem = document.createElement('div');
+            resultItem.style.padding = '10px';
+            resultItem.style.margin = '5px 0';
+            resultItem.style.borderRadius = '5px';
+            resultItem.style.borderLeft = '4px solid';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            
+            switch (type) {
+                case 'success':
+                    resultItem.style.background = '#e8f5e8';
+                    resultItem.style.borderColor = '#4caf50';
+                    resultItem.style.color = '#2e7d32';
+                    break;
+                case 'error':
+                    resultItem.style.background = '#ffebee';
+                    resultItem.style.borderColor = '#f44336';
+                    resultItem.style.color = '#c62828';
+                    break;
+                case 'info':
+                    resultItem.style.background = '#e3f2fd';
+                    resultItem.style.borderColor = '#2196f3';
+                    resultItem.style.color = '#1565c0';
+                    break;
+            }
+            
+            resultItem.innerHTML = `<strong>${timestamp}:</strong> ${message}`;
+            outputDiv.appendChild(resultItem);
+            
+            // Auto-scroll
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+            
+            // Remove old results (keep last 10)
+            while (outputDiv.children.length > 10) {
+                outputDiv.removeChild(outputDiv.firstChild);
+            }
+        }
+        
+        // Auto-test when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                showTestResult('🚀 Sofia WebSocket Test-Seite geladen', 'info');
+                
+                // Check if services are running
+                checkServices();
+            }, 1000);
+        });
+        
+        function checkServices() {
+            // Check WebSocket Bridge
+            const ws = new WebSocket('ws://localhost:8081');
+            ws.onopen = () => {
+                showTestResult('✅ WebSocket Bridge läuft auf Port 8081', 'success');
+                ws.close();
+            };
+            ws.onerror = () => {
+                showTestResult('❌ WebSocket Bridge nicht erreichbar (Port 8081)', 'error');
+            };
+            
+            // Check Calendar Server
+            fetch('http://localhost:3005/health')
+                .then(() => {
+                    showTestResult('✅ Kalender-Server läuft auf Port 3005', 'success');
+                })
+                .catch(() => {
+                    showTestResult('❌ Kalender-Server nicht erreichbar (Port 3005)', 'error');
+                });
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey) {
+                switch (e.key) {
+                    case 'c':
+                        e.preventDefault();
+                        testConnection();
+                        break;
+                    case 'm':
+                        e.preventDefault();
+                        testAudio();
+                        break;
+                    case 'd':
+                        e.preventDefault();
+                        showDebugInfo();
+                        break;
+                }
+            }
+        });
+        
+        // Status updates
+        setInterval(() => {
+            if (window.sofiaWebSocketClient) {
+                const status = window.sofiaWebSocketClient.isConnected ? '🟢 Verbunden' : '🔴 Getrennt';
+                document.title = `Sofia WebSocket Test - ${status}`;
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
