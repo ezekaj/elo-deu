@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofia Dental Calendar</title>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background: #667eea; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        .status { padding: 10px; margin-bottom: 20px; border-radius: 5px; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        #calendar { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🦷 Sofia Dental Calendar</h1>
+        <p>Simplified Version</p>
+    </div>
+    
+    <div id="status" class="status disconnected">Loading...</div>
+    <div id="calendar"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script src="config.js"></script>
+    <script>
+        // Simple calendar without Socket.IO
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusDiv = document.getElementById('status');
+            const calendarEl = document.getElementById('calendar');
+            
+            // Test API connection
+            fetch(window.SOFIA_CONFIG.API_BASE_URL + '/api/appointments', {
+                headers: {
+                    'ngrok-skip-browser-warning': 'true'
+                }
+            })
+            .then(response => response.json())
+            .then(appointments => {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = '✅ Connected - ' + appointments.length + ' appointments loaded';
+                
+                // Initialize calendar
+                const calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    locale: 'de',
+                    events: appointments,
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                    }
+                });
+                calendar.render();
+            })
+            .catch(error => {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = '❌ Connection Error: ' + error.message;
+            });
+        });
+    </script>
+</body>
+</html>
