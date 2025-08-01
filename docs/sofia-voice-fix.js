@@ -16,6 +16,43 @@ let room = null;
 let isConnecting = false;
 let audioTrack = null;
 
+// Ensure LiveKit is loaded
+async function ensureLiveKitLoaded() {
+    if (typeof window.LiveKitClient !== 'undefined') {
+        console.log('LiveKit already loaded');
+        return true;
+    }
+    
+    console.log('Loading LiveKit SDK...');
+    return new Promise((resolve, reject) => {
+        // Check if script already exists
+        const existingScript = document.querySelector('script[src*="livekit-client"]');
+        if (existingScript) {
+            // Wait for it to load
+            if (window.LiveKitClient) {
+                resolve(true);
+            } else {
+                existingScript.addEventListener('load', () => resolve(true));
+                existingScript.addEventListener('error', () => reject(new Error('LiveKit load failed')));
+            }
+            return;
+        }
+        
+        // Create new script
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.js';
+        script.onload = () => {
+            console.log('LiveKit SDK loaded successfully');
+            resolve(true);
+        };
+        script.onerror = () => {
+            console.error('Failed to load LiveKit SDK');
+            reject(new Error('LiveKit SDK konnte nicht geladen werden'));
+        };
+        document.head.appendChild(script);
+    });
+}
+
 async function checkMicrophonePermission() {
     try {
         // Check if we already have permission
@@ -56,14 +93,18 @@ async function startVoiceAssistant() {
     }
     
     isConnecting = true;
-    statusText.textContent = 'Mikrofonzugriff wird überprüft...';
+    statusText.textContent = 'System wird initialisiert...';
     
     try {
-        // Step 1: Check microphone permission first
-        await checkMicrophonePermission();
-        statusText.textContent = 'Verbindung wird hergestellt...';
+        // Step 1: Ensure LiveKit is loaded
+        await ensureLiveKitLoaded();
         
-        // Step 2: Get token - use CONFIG if available
+        // Step 2: Check microphone permission
+        statusText.textContent = 'Mikrofonzugriff wird überprüft...';
+        await checkMicrophonePermission();
+        
+        // Step 3: Get token
+        statusText.textContent = 'Verbindung wird hergestellt...';
         const apiUrl = `${window.CONFIG.API_BASE_URL}/api/sofia/token`;
         console.log('Requesting token from:', apiUrl);
         
@@ -87,20 +128,12 @@ async function startVoiceAssistant() {
         const { token, url, roomName } = await tokenResponse.json();
         console.log('Token erhalten für Raum:', roomName);
         
-        // Step 3: Load LiveKit SDK if not loaded
-        if (typeof LiveKitClient === 'undefined') {
-            statusText.textContent = 'LiveKit wird geladen...';
-            await new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/livekit-client@2.5.7/dist/livekit-client.umd.js';
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
+        // Step 4: Create room - now LiveKit is definitely loaded
+        if (!window.LiveKitClient) {
+            throw new Error('LiveKit SDK nicht verfügbar');
         }
         
-        // Step 4: Create room
-        room = new LiveKitClient.Room({
+        room = new window.LiveKitClient.Room({
             adaptiveStream: true,
             dynacast: true,
             audioCaptureDefaults: {
@@ -120,7 +153,7 @@ async function startVoiceAssistant() {
             
             try {
                 // Create and publish audio track
-                audioTrack = await LiveKitClient.createLocalAudioTrack({
+                audioTrack = await window.LiveKitClient.createLocalAudioTrack({
                     echoCancellation: true,
                     noiseSuppression: true,
                     autoGainControl: true
@@ -139,8 +172,9 @@ async function startVoiceAssistant() {
         
         room.on('participantConnected', (participant) => {
             console.log('Teilnehmer verbunden:', participant.identity);
-            if (participant.identity.toLowerCase().includes('sofia')) {
-                addMessage('Sofia ist jetzt im Raum.', 'system');
+            if (participant.identity.toLowerCase().includes('sofia') || 
+                participant.identity.toLowerCase().includes('agent')) {
+                addMessage('Sofia ist jetzt im Raum und hört zu.', 'system');
             }
         });
         
@@ -149,22 +183,33 @@ async function startVoiceAssistant() {
                 const audioEl = track.attach();
                 audioEl.style.display = 'none';
                 document.body.appendChild(audioEl);
+                console.log('Audio track attached from:', participant.identity);
             }
         });
         
         room.on('dataReceived', (payload, participant) => {
             try {
                 const data = JSON.parse(new TextDecoder().decode(payload));
+                console.log('Data received:', data);
                 if (data.type === 'transcript') {
                     addMessage(data.text, data.role === 'user' ? 'user' : 'sofia');
+                } else if (data.message) {
+                    addMessage(data.message, 'sofia');
                 }
             } catch (e) {
                 console.error('Datenverarbeitungsfehler:', e);
             }
         });
         
-        room.on('disconnected', () => {
-            console.log('Verbindung getrennt');
+        room.on('connectionStateChanged', (state) => {
+            console.log('Connection state:', state);
+            if (state === 'reconnecting') {
+                statusText.textContent = '🔄 Verbindung wird wiederhergestellt...';
+            }
+        });
+        
+        room.on('disconnected', (reason) => {
+            console.log('Verbindung getrennt:', reason);
             handleDisconnection();
         });
         
@@ -184,6 +229,8 @@ async function startVoiceAssistant() {
         
         if (error.message.includes('verweigert')) {
             addMessage('Bitte erlauben Sie den Mikrofonzugriff in Ihrem Browser und laden Sie die Seite neu.', 'sofia');
+        } else if (error.message.includes('Token-Fehler')) {
+            addMessage('Verbindung zum Server fehlgeschlagen. Bitte überprüfen Sie Ihre Internetverbindung.', 'sofia');
         }
         
         if (room) {
@@ -228,6 +275,8 @@ function handleDisconnection() {
     
     room = null;
     isConnecting = false;
+    
+    addMessage('Die Verbindung wurde getrennt.', 'system');
 }
 
 function addMessage(text, type = 'sofia') {
@@ -256,8 +305,8 @@ window.startVoiceAssistant = startVoiceAssistant;
 window.stopVoiceAssistant = stopVoiceAssistant;
 window.startSimpleSofia = startVoiceAssistant; // Override demo
 
-// Set up button handlers
-document.addEventListener('DOMContentLoaded', function() {
+// Set up button handlers when DOM is ready
+function setupSofiaButton() {
     const sofiaBtn = document.getElementById('sofiaAgentBtn');
     if (sofiaBtn) {
         // Remove old handlers
@@ -277,8 +326,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-});
+}
 
+// Setup when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupSofiaButton);
+} else {
+    setupSofiaButton();
+}
+
+// Global close function
 window.closeSofiaInterface = function() {
     const sofiaInterface = document.getElementById('sofiaInterface');
     const sofiaBtn = document.getElementById('sofiaAgentBtn');
