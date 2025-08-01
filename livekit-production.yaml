@@ -1,0 +1,102 @@
+# Production-Ready LiveKit Configuration
+# Compatible with livekit/livekit-server:latest
+
+# Main HTTP/WebSocket port
+port: 7880
+bind_addresses:
+  - "0.0.0.0"
+
+# Redis configuration (optional - for distributed mode)
+# redis:
+#   address: localhost:6379
+#   db: 0
+
+# RTC (WebRTC) Configuration
+rtc:
+  # TCP port for WebRTC when UDP is blocked
+  tcp_port: 7881
+  
+  # UDP port range (set to 0 to disable UDP)
+  port_range_start: 0
+  port_range_end: 0
+  
+  # Enable external IP detection
+  use_external_ip: true
+  
+  # Force TCP-only mode by limiting transports
+  # This is achieved by setting UDP ports to 0 above
+  
+  # Optional: Configure specific network interfaces
+  # interfaces:
+  #   includes:
+  #     - eth0
+  #   excludes:
+  #     - docker0
+
+# Built-in TURN server configuration
+turn:
+  enabled: true
+  # TURN listening ports
+  udp_port: 3478
+  tls_port: 5349
+  # External TLS termination (set to false for self-signed certs)
+  external_tls: false
+  # Domain for TURN server (optional)
+  # domain: turn.example.com
+  # Relay port range
+  relay_range_start: 1024
+  relay_range_end: 30000
+
+# Room configuration
+room:
+  # Timeout to destroy empty rooms (seconds)
+  empty_timeout: 300
+  # Timeout before removing participant after disconnect
+  departure_timeout: 20
+  # Max participants per room (0 = unlimited)
+  max_participants: 50
+  # Enable simulcast for video
+  enable_simulcast: true
+  # Playout delay configuration
+  min_playout_delay: 0
+  max_playout_delay: 0
+  # Enabled codecs
+  enabled_codecs:
+    - mime: audio/opus
+    - mime: video/vp8
+    - mime: video/h264
+
+# Webhook configuration
+webhook:
+  # API key for webhook authentication
+  api_key: secret
+  # Webhook URLs mapping
+  urls:
+    - "http://sofia-agent:8080/webhook"
+
+# API keys for authentication
+keys:
+  devkey: secret
+
+# Logging configuration
+logging:
+  level: info
+  # Use JSON format for production
+  json: false
+  # Sample logs to reduce volume
+  sample: false
+  # Add colors to log output (disable for production)
+  add_colors: false
+
+# Monitoring configuration
+# prometheus:
+#   port: 6789
+
+# Limit configuration
+limit:
+  # Limit incoming bytes per second per participant (0 = unlimited)
+  bytes_per_sec: 0
+  # Limit number of concurrent sessions
+  concurrent_sessions: 0
+
+# Health check endpoint is available at :7880/

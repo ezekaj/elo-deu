@@ -8,9 +8,9 @@ services:
       - "7880:7880"
       - "7881:7881/tcp"  # TCP only, no UDP
     environment:
-      - "LIVEKIT_KEYS=devkey: devsecret_that_is_at_least_32_characters_long"
+      - "LIVEKIT_KEYS=devkey: secret"
       - "LIVEKIT_LOG_LEVEL=info"
-    command: --dev --bind 0.0.0.0
+    command: --config /etc/livekit.yaml
     volumes:
       - ./livekit.yaml:/etc/livekit.yaml
     networks:
@@ -31,13 +31,15 @@ services:
     environment:
       - LIVEKIT_URL=ws://livekit:7880
       - LIVEKIT_API_KEY=devkey
-      - LIVEKIT_API_SECRET=devsecret_that_is_at_least_32_characters_long
+      - LIVEKIT_API_SECRET=secret
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - CALENDAR_URL=http://dental-calendar:3005
       - HEALTH_CHECK_PORT=8080
     depends_on:
-      - livekit
-      - dental-calendar
+      livekit:
+        condition: service_healthy
+      dental-calendar:
+        condition: service_started
     networks:
       - sofia-network
     ports:
@@ -95,7 +97,7 @@ services:
       - SOFIA_VOICE_ENABLED=true
       - LIVEKIT_URL=ws://livekit:7880
       - LIVEKIT_API_KEY=devkey
-      - LIVEKIT_API_SECRET=devsecret_that_is_at_least_32_characters_long
+      - LIVEKIT_API_SECRET=secret
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
       interval: 10s

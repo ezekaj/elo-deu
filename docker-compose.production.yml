@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # Production-Ready LiveKit Server
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: livekit-production
+    ports:
+      # Main HTTP/WebSocket port
+      - "7880:7880"
+      # TCP port for WebRTC (when UDP is blocked)
+      - "7881:7881/tcp"
+      # TURN server ports
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+      - "5349:5349/tcp"
+      # Relay port range for TURN (TCP only for firewall traversal)
+      - "1024-1124:1024-1124/tcp"
+    environment:
+      # LiveKit will use the config file
+      - LIVEKIT_CONFIG_FILE=/etc/livekit.yaml
+    command: --config /etc/livekit.yaml
+    volumes:
+      - ./livekit-production.yaml:/etc/livekit.yaml:ro
+    networks:
+      - sofia-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:7880/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # Sofia Voice Agent
+  sofia-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.sofia
+    container_name: sofia-agent-production
+    environment:
+      # LiveKit connection
+      - LIVEKIT_URL=ws://livekit:7880
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=secret
+      # Other services
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - CALENDAR_URL=http://dental-calendar:3005
+      - HEALTH_CHECK_PORT=8080
+      # Production settings
+      - LOG_LEVEL=INFO
+      - PYTHON_ENV=production
+    depends_on:
+      livekit:
+        condition: service_healthy
+      dental-calendar:
+        condition: service_started
+    networks:
+      - sofia-network
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Dental Calendar Frontend
+  dental-calendar:
+    build:
+      context: ./dental-calendar
+      dockerfile: Dockerfile
+    container_name: dental-calendar-production
+    environment:
+      - NODE_ENV=production
+      - SOFIA_VOICE_ENABLED=true
+      - LIVEKIT_URL=ws://livekit:7880
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=secret
+    volumes:
+      - ./dental-calendar/dental_calendar.db:/app/dental_calendar.db
+    networks:
+      - sofia-network
+    ports:
+      - "3005:3005"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # Production Monitoring (Optional)
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #     - prometheus_data:/prometheus
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #   ports:
+  #     - "9090:9090"
+  #   networks:
+  #     - sofia-network
+  #   restart: unless-stopped
+
+networks:
+  sofia-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# volumes:
+#   prometheus_data:

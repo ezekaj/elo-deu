@@ -1,6 +1,9 @@
 from dotenv import load_dotenv
 import logging
 import asyncio
+import time
+from aiohttp import web
+import threading
 
 from livekit import agents, rtc
 from livekit.agents import AgentSession, Agent, RoomInputOptions
@@ -62,6 +65,49 @@ load_dotenv()
 # Enable debug logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+
+class HealthServer:
+    """Health check server for monitoring and webhooks"""
+    def __init__(self, port=8080):
+        self.port = port
+        self.app = web.Application()
+        self.is_connected = False
+        self.setup_routes()
+        
+    def setup_routes(self):
+        self.app.router.add_get('/health', self.health_check)
+        self.app.router.add_post('/webhook/room-started', self.room_started)
+        self.app.router.add_post('/webhook/participant-joined', self.participant_joined)
+        
+    async def health_check(self, request):
+        return web.json_response({
+            'status': 'ok',
+            'service': 'sofia-agent',
+            'livekit_connected': self.is_connected,
+            'ready': True,
+            'timestamp': int(time.time())
+        })
+        
+    async def room_started(self, request):
+        data = await request.json()
+        logger.info(f"Room started webhook: {data}")
+        return web.json_response({'status': 'ok'})
+        
+    async def participant_joined(self, request):
+        data = await request.json()
+        logger.info(f"Participant joined webhook: {data}")
+        return web.json_response({'status': 'ok'})
+        
+    async def start(self):
+        runner = web.AppRunner(self.app)
+        await runner.setup()
+        site = web.TCPSite(runner, '0.0.0.0', self.port)
+        await site.start()
+        logger.info(f"Health server started on port {self.port}")
+
+# Create global health server instance
+health_server = HealthServer()
 
 
 class DentalReceptionist(Agent):
@@ -159,6 +205,9 @@ async def entrypoint(ctx: agents.JobContext):
     print(f"Room participants: {len(ctx.room.remote_participants)}")
     print("Starte deutsche Zahnarzt-Assistentin mit Audio-Input...")
     logger.info("Starting German dental assistant agent")
+    
+    # Update health server connection status
+    health_server.is_connected = True
     
     # Create the agent
     agent = DentalReceptionist()
@@ -308,6 +357,11 @@ async def connect_to_room(room_name):
     except Exception as e:
         print(f"Connection error: {e}")
 
+async def start_health_server():
+    """Start the health server"""
+    await health_server.start()
+
+
 if __name__ == "__main__":
     import sys
     import asyncio
@@ -324,6 +378,19 @@ if __name__ == "__main__":
         # Ensure environment variables are loaded
         load_dotenv()
         
+        # Start health server in background
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.create_task(start_health_server())
+        
+        # Start a thread to run the event loop for health server
+        def run_health_loop():
+            asyncio.set_event_loop(loop)
+            loop.run_forever()
+        
+        health_thread = threading.Thread(target=run_health_loop, daemon=True)
+        health_thread.start()
+        
         worker_options = agents.WorkerOptions(
             entrypoint_fnc=entrypoint,
             # Don't set agent_name to keep automatic dispatch enabled
@@ -339,6 +406,7 @@ if __name__ == "__main__":
         print(f"LiveKit URL: {worker_options.ws_url}")
         print(f"API Key: {worker_options.api_key}")
         print("Auto-dispatch: ENABLED (no agent_name set)")
+        print("Health server: http://0.0.0.0:8080/health")
         print("Waiting for room assignments...")
         print("If you see 'SOFIA ENTRYPOINT TRIGGERED' below, Sofia is working!")
         print("=" * 60 + "\n")
