@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Simple LiveKit setup for local testing
+  livekit:
+    image: livekit/livekit-server:latest
+    ports:
+      - "7880:7880"
+    environment:
+      - LIVEKIT_KEYS=devkey:devsecret
+    command: --dev
+    restart: unless-stopped
+
+  # Dental Calendar Application
+  dental-calendar:
+    build:
+      context: ./dental-calendar
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=development
+      - PORT=3005
+      - LIVEKIT_URL=ws://livekit:7880
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=devsecret
+    depends_on:
+      - livekit
+    restart: unless-stopped
+
+  # CRM Dashboard (optional)
+  crm-dashboard:
+    build:
+      context: ./crm
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+    restart: unless-stopped
