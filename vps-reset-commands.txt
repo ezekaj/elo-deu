@@ -1,0 +1,46 @@
+# VPS Reset Commands - Run these AFTER you regain SSH access
+# This will clean everything without deleting the server
+
+# 1. Stop all services
+docker stop $(docker ps -aq) 2>/dev/null || true
+docker rm $(docker ps -aq) 2>/dev/null || true
+pkill -f node
+pkill -f python3
+systemctl stop nginx
+
+# 2. Clean up Docker (if you want to remove Docker completely)
+docker system prune -a -f
+apt-get remove docker docker-engine docker.io containerd runc -y
+apt-get autoremove -y
+
+# 3. Remove project files
+rm -rf /root/elo-deu
+rm -rf /root/elo-dental
+rm -rf /var/www/*
+
+# 4. Reset nginx to default
+rm -f /etc/nginx/sites-enabled/elosofia.site
+rm -f /etc/nginx/sites-available/elosofia.site
+apt-get purge nginx nginx-common -y
+apt-get autoremove -y
+
+# 5. Remove SSL certificates
+certbot delete --cert-name elosofia.site 2>/dev/null || true
+apt-get remove certbot -y
+
+# 6. Clean package cache
+apt-get clean
+apt-get update
+
+# 7. Remove any cron jobs or services
+crontab -r 2>/dev/null || true
+
+# 8. Reset firewall to default
+ufw --force reset
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow 22/tcp
+ufw --force enable
+
+echo "Server reset complete!"
+echo "You now have a clean Ubuntu server with only SSH access enabled"

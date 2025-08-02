@@ -1,0 +1,12 @@
+#!/usr/bin/expect -f
+set timeout 30
+spawn ssh root@167.235.67.1
+expect "password:"
+send "eT7-Ldi-G7Q-2xR\r"
+expect "# "
+send "cd /root/elo-deu\r"
+expect "# "
+send "./quick-deploy.sh\r"
+expect "# "
+send "exit\r"
+expect eof
