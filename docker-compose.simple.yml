@@ -1,28 +1,23 @@
 version: '3.8'
 
 services:
-  # LiveKit Server for Voice Processing
+  # LiveKit Server - Simple dev mode
   livekit:
     image: livekit/livekit-server:latest
     ports:
       - "7880:7880"
-      - "7881:7881"
-      - "7882:7882/udp"
-    environment:
-      LIVEKIT_KEYS: "devkey: secret"
-    command: --dev --bind 0.0.0.0
-    networks:
-      - sofia-network
+    command: --dev
     restart: unless-stopped
 
-  # Sofia Voice Agent - Run locally instead
-  # sofia-agent:
-  #   Run with: python agent.py dev
-
-  # Dental Calendar - Run locally instead  
-  # dental-calendar:
-  #   Run with: cd dental-calendar && npm start
-
-networks:
-  sofia-network:
-    driver: bridge
+  # Dental Calendar Application
+  dental-calendar:
+    build:
+      context: ./dental-calendar
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      - LIVEKIT_URL=ws://livekit:7880
+    depends_on:
+      - livekit
+    restart: unless-stopped
