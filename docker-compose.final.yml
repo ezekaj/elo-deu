@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # LiveKit Server - Simple dev mode (no authentication needed)
+  livekit:
+    image: livekit/livekit-server:latest
+    ports:
+      - "7880:7880"
+    command: --dev
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:7880/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Dental Calendar Application
+  app:
+    build:
+      context: ./dental-calendar
+      dockerfile: Dockerfile.simple
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      - LIVEKIT_URL=ws://livekit:7880
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=devsecret
+    depends_on:
+      - livekit
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
